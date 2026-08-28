@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>StudyLife FocusGuard settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main>
+    <h1>StudyLife FocusGuard</h1>
+
+    <section class="card">
+      <h2>Connection</h2>
+      <p class="desc">Point this at your own self-hosted StudyLife instance. Just the base address - no path needed.</p>
+      <div class="row">
+        <input id="server-url" type="text" placeholder="https://studylife.example.com" />
+        <button id="connect-button" type="button" class="primary">Connect</button>
+      </div>
+      <p id="connect-status" class="status"></p>
+      <p id="connection-hint" class="hint"></p>
+    </section>
+
+    <section class="card">
+      <h2>Blocking mode</h2>
+      <p class="desc">
+        Chosen while a focus session is running, based on the endpoint above (<code>GET /api/timerstate</code>).
+        FocusGuard never reads what the session is for - only whether one is active.
+      </p>
+      <div class="row">
+        <label><input type="radio" name="mode" value="whitelist" id="mode-whitelist" /> Allowlist - block everything except the sites below (recommended for deep focus)</label>
+      </div>
+      <div class="row">
+        <label><input type="radio" name="mode" value="blacklist" id="mode-blacklist" /> Blocklist - only block the sites below, everything else stays reachable</label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 id="list-heading">Allowed sites</h2>
+      <p class="desc" id="list-desc">
+        Just the domain, e.g. <code>wikipedia.org</code> - subdomains are covered automatically, no need to list each one.
+      </p>
+      <div class="row">
+        <input id="domain-input" type="text" placeholder="example.com" />
+        <button id="add-domain" type="button">Add</button>
+      </div>
+      <ul id="domain-list"></ul>
+    </section>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
