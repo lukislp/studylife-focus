@@ -23,6 +23,12 @@ const POLL_PERIOD_MINUTES = 1;
 // "not running" as a transition and skip the tab sweep it already did before being killed.
 const LAST_ACTIVE_KEY = "lastKnownActive";
 
+// tabId -> the URL it was showing right before sweepOpenTabs() redirected it to the blocked
+// page - restoreSweptTabs() reads this back when the session ends. Session storage (not local):
+// only meaningful for the current browser session's actual open tabs, and clearing automatically
+// on browser restart is the right behavior (a tab that no longer exists has nothing to restore).
+const SWEPT_TABS_KEY = "sweptTabOriginalUrls";
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create(POLL_ALARM_NAME, { periodInMinutes: POLL_PERIOD_MINUTES });
 });
@@ -79,12 +85,15 @@ async function pollAndApply(): Promise<void> {
   // so this doesn't re-scan every open tab on every single poll while a session is already running.
   if (ruleConfig.active && !previouslyActive) {
     await sweepOpenTabs(ruleConfig);
+  } else if (!ruleConfig.active && previouslyActive) {
+    await restoreSweptTabs();
   }
 }
 
 async function sweepOpenTabs(config: RuleConfig): Promise<void> {
   const tabs = await chrome.tabs.query({});
   const blockedUrl = chrome.runtime.getURL(BLOCKED_PAGE_PATH);
+  const originalUrls: Record<number, string> = {};
   for (const tab of tabs) {
     if (!tab.id || !tab.url) continue;
     let hostname: string;
@@ -96,11 +105,40 @@ async function sweepOpenTabs(config: RuleConfig): Promise<void> {
       continue;
     }
     if (!isDomainAllowed(hostname, config)) {
+      // Recorded BEFORE the redirect - this is the only point in the whole extension that ever
+      // sees a blocked page's real destination (see rules.ts's comment on why the
+      // declarativeNetRequest redirect itself can't carry it along), so restoreSweptTabs() below
+      // can send the tab back where it was once the session ends.
+      originalUrls[tab.id] = tab.url;
       await chrome.tabs.update(tab.id, { url: blockedUrl }).catch(() => {
         // A tab can close between query() and update() - nothing to redirect anymore, ignore.
       });
     }
   }
+  if (Object.keys(originalUrls).length > 0) {
+    const existing = ((await chrome.storage.session.get(SWEPT_TABS_KEY))[SWEPT_TABS_KEY] as Record<number, string> | undefined) ?? {};
+    await chrome.storage.session.set({ [SWEPT_TABS_KEY]: { ...existing, ...originalUrls } });
+  }
+}
+
+// Sends every tab this extension itself redirected to the blocked page back to whatever it was
+// showing before, once the session that caused the redirect has ended. Deliberately only tabs
+// STILL sitting on the blocked page: if the user already navigated away from it themselves while
+// the session was running, that's a deliberate choice this must not undo.
+async function restoreSweptTabs(): Promise<void> {
+  const stored = (await chrome.storage.session.get(SWEPT_TABS_KEY))[SWEPT_TABS_KEY] as Record<number, string> | undefined;
+  if (!stored || Object.keys(stored).length === 0) return;
+
+  const blockedUrl = chrome.runtime.getURL(BLOCKED_PAGE_PATH);
+  for (const [tabIdKey, originalUrl] of Object.entries(stored)) {
+    const tabId = Number(tabIdKey);
+    const tab = await chrome.tabs.get(tabId).catch(() => null); // tab may have been closed since
+    if (!tab || tab.url !== blockedUrl) continue;
+    await chrome.tabs.update(tabId, { url: originalUrl }).catch(() => {
+      // Closed between the get() above and this update() - nothing left to restore, ignore.
+    });
+  }
+  await chrome.storage.session.remove(SWEPT_TABS_KEY);
 }
 
 function hostnameOf(url: string): string | null {

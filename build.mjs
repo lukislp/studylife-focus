@@ -4,6 +4,8 @@
 import { build, context } from "esbuild";
 import { mkdirSync, copyFileSync } from "node:fs";
 
+const FONT_FILES = ["dm-sans-latin.woff2", "dm-sans-latin-ext.woff2", "OFL.txt"];
+
 const watch = process.argv.includes("--watch");
 
 mkdirSync("dist", { recursive: true });
@@ -26,6 +28,7 @@ const moduleBuildOptions = {
 
 const STATIC_FILES = [
   "manifest.json",
+  "src/theme.css",
   "src/popup.html",
   "src/popup.css",
   "src/options.html",
@@ -41,6 +44,12 @@ function copyStaticFiles() {
   }
   for (const size of [16, 48, 128]) {
     copyFileSync(`src/icon${size}.png`, `dist/icon${size}.png`);
+  }
+  // Self-hosted DM Sans (see theme.css) - the actual font files plus their SIL Open Font
+  // License text, redistributed alongside them as the license requires.
+  mkdirSync("dist/fonts", { recursive: true });
+  for (const file of FONT_FILES) {
+    copyFileSync(`src/fonts/${file}`, `dist/fonts/${file}`);
   }
 }
 

@@ -22,6 +22,9 @@ never touches your notes, sessions, or account settings at all.
 4. While a focus session is running (polled from `GET /api/timerstate`, roughly once a minute -
    see "Known limitations" below), blocked navigations redirect to a page showing the session's
    remaining time, and any matching tabs already open when the session starts get swept too.
+5. Once the session ends, every tab FocusGuard itself redirected in step 4 automatically loads
+   its original page again - as long as you haven't already navigated that tab somewhere else in
+   the meantime, in which case it's left alone.
 
 Add a domain once (e.g. `wikipedia.org`) and every subdomain/subpage under it is covered
 automatically - no need to list `en.wikipedia.org`, `de.wikipedia.org`, etc. separately.
@@ -50,6 +53,11 @@ automatically - no need to list `en.wikipedia.org`, `de.wikipedia.org`, etc. sep
   extension page, not a per-request rewrite, so there's currently no channel carrying the
   original URL along. A future version could add this via `chrome.webNavigation` plus a
   regex-based redirect rewrite; it's a real gap, just not solved yet.
+- **The automatic "restore my tabs" behavior (see step 5 above) only covers tabs that were
+  already open when the session started** (the ones the sweep itself redirected). A tab that
+  tried to navigate to a blocked site *while* a session was already running isn't tracked the
+  same way (no channel carries its original URL either, same root cause as the point above), so
+  it stays on the blocked page until you navigate it yourself.
 - **No in-extension way to end a session early.** The FocusGuard API key is deliberately
   read-only (see below) - if you need to stop, end the session in StudyLife itself.
 
