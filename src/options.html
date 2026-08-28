@@ -3,45 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <title>StudyLife FocusGuard settings</title>
+  <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="options.css" />
 </head>
 <body>
   <main>
-    <h1>StudyLife FocusGuard</h1>
+    <div class="brand">
+      <img class="brand-icon" src="icon48.png" alt="" />
+      <span class="brand-name">StudyLife FocusGuard</span>
+    </div>
 
     <section class="card">
-      <h2>Connection</h2>
-      <p class="desc">Point this at your own self-hosted StudyLife instance. Just the base address - no path needed.</p>
+      <div class="card-label">Connection</div>
+      <p class="card-desc">Point this at your own self-hosted StudyLife instance. Just the base address - no path needed.</p>
       <div class="row">
-        <input id="server-url" type="text" placeholder="https://studylife.example.com" />
-        <button id="connect-button" type="button" class="primary">Connect</button>
+        <input class="input" id="server-url" type="text" placeholder="https://studylife.example.com" />
+        <button id="connect-button" type="button" class="btn-primary">Connect</button>
       </div>
       <p id="connect-status" class="status"></p>
       <p id="connection-hint" class="hint"></p>
     </section>
 
     <section class="card">
-      <h2>Blocking mode</h2>
-      <p class="desc">
-        Chosen while a focus session is running, based on the endpoint above (<code>GET /api/timerstate</code>).
-        FocusGuard never reads what the session is for - only whether one is active.
+      <div class="card-label">Blocking mode</div>
+      <p class="card-desc">
+        Applied whenever a focus session is running, based on the endpoint above
+        (<code>GET /api/timerstate</code>). FocusGuard never reads what the session is for -
+        only whether one is active.
       </p>
-      <div class="row">
-        <label><input type="radio" name="mode" value="whitelist" id="mode-whitelist" /> Allowlist - block everything except the sites below (recommended for deep focus)</label>
-      </div>
-      <div class="row">
-        <label><input type="radio" name="mode" value="blacklist" id="mode-blacklist" /> Blocklist - only block the sites below, everything else stays reachable</label>
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" id="mode-toggle" checked />
+          <span class="toggle-track"></span>
+        </label>
+        <span class="toggle-label" id="mode-toggle-label">
+          Allowlist - block everything except the sites below
+          <span class="toggle-sub" id="mode-toggle-sub">Recommended for deep focus - decide up front what you need, nothing else sneaks in.</span>
+        </span>
       </div>
     </section>
 
     <section class="card">
-      <h2 id="list-heading">Allowed sites</h2>
-      <p class="desc" id="list-desc">
+      <div class="card-label" id="list-heading">Allowed sites</div>
+      <p class="card-desc" id="list-desc">
         Just the domain, e.g. <code>wikipedia.org</code> - subdomains are covered automatically, no need to list each one.
       </p>
       <div class="row">
-        <input id="domain-input" type="text" placeholder="example.com" />
-        <button id="add-domain" type="button">Add</button>
+        <input class="input" id="domain-input" type="text" placeholder="example.com" />
+        <button id="add-domain" type="button" class="btn-secondary">Add</button>
       </div>
       <ul id="domain-list"></ul>
     </section>

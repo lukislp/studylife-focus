@@ -1,64 +1,39 @@
-:root {
-  color-scheme: light dark;
-  --bg: #14151a;
-  --card: #1e2028;
-  --text: #f2f2f4;
-  --muted: #9a9aa5;
-  --accent: #7c6cf0;
-}
-
-* {
-  box-sizing: border-box;
-}
+/* Page-specific layout only - colors/fonts/card/button/[hidden] safety all come from theme.css. */
 
 body {
-  margin: 0;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   padding: 2rem;
 }
 
 .card {
-  max-width: 30rem;
+  max-width: 26rem;
   text-align: center;
 }
 
 h1 {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
+  font-weight: 500;
   margin: 0 0 1rem;
 }
 
 .countdown {
-  font-size: 3rem;
-  font-weight: 700;
+  font-size: 2.75rem;
+  font-weight: 300;
   font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
   margin: 0 0 0.25rem;
   color: var(--accent);
 }
 
 .hint {
-  color: var(--muted);
   margin: 0 0 1.5rem;
 }
 
 .note {
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.button {
-  display: inline-block;
-  margin-top: 1.5rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 0.5rem;
-  background: var(--accent);
-  color: white;
-  text-decoration: none;
-  font-weight: 600;
+  color: var(--text3);
+  font-size: 0.85rem;
+  line-height: 1.6;
 }

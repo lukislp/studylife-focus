@@ -15,8 +15,9 @@ const connectionHint = document.getElementById("connection-hint") as HTMLParagra
 const connectButton = document.getElementById("connect-button") as HTMLButtonElement;
 const connectStatus = document.getElementById("connect-status") as HTMLParagraphElement;
 
-const modeWhitelist = document.getElementById("mode-whitelist") as HTMLInputElement;
-const modeBlacklist = document.getElementById("mode-blacklist") as HTMLInputElement;
+const modeToggle = document.getElementById("mode-toggle") as HTMLInputElement;
+const modeToggleLabel = document.getElementById("mode-toggle-label") as HTMLSpanElement;
+const modeToggleSub = document.getElementById("mode-toggle-sub") as HTMLSpanElement;
 const listHeading = document.getElementById("list-heading") as HTMLHeadingElement;
 const listDesc = document.getElementById("list-desc") as HTMLParagraphElement;
 const domainInput = document.getElementById("domain-input") as HTMLInputElement;
@@ -105,6 +106,15 @@ function setConnectStatus(message: string, kind: "success" | "error"): void {
 
 function renderListSection(): void {
   const isWhitelist = config.mode === "whitelist";
+
+  modeToggle.checked = isWhitelist;
+  modeToggleLabel.firstChild!.textContent = isWhitelist
+    ? "Allowlist - block everything except the sites below"
+    : "Blocklist - only block the sites below, everything else stays reachable";
+  modeToggleSub.textContent = isWhitelist
+    ? "Recommended for deep focus - decide up front what you need, nothing else sneaks in."
+    : "Simpler to set up, but never fully complete - new distractions need to be added reactively.";
+
   listHeading.textContent = isWhitelist ? "Allowed sites" : "Blocked sites";
   listDesc.innerHTML = isWhitelist
     ? "Just the domain, e.g. <code>wikipedia.org</code> - subdomains are covered automatically, no need to list each one. StudyLife itself is always reachable, no matter what's on this list."
@@ -118,6 +128,7 @@ function renderListSection(): void {
     span.textContent = domain;
     const removeButton = document.createElement("button");
     removeButton.type = "button";
+    removeButton.className = "btn-danger";
     removeButton.textContent = "Remove";
     removeButton.addEventListener("click", () => void removeDomain(domain));
     li.append(span, removeButton);
@@ -154,17 +165,12 @@ async function setMode(mode: BlockConfig["mode"]): Promise<void> {
   renderListSection();
 }
 
-modeWhitelist.addEventListener("change", () => {
-  if (modeWhitelist.checked) void setMode("whitelist");
-});
-modeBlacklist.addEventListener("change", () => {
-  if (modeBlacklist.checked) void setMode("blacklist");
+modeToggle.addEventListener("change", () => {
+  void setMode(modeToggle.checked ? "whitelist" : "blacklist");
 });
 
 async function init(): Promise<void> {
   config = await loadBlockConfig();
-  modeWhitelist.checked = config.mode === "whitelist";
-  modeBlacklist.checked = config.mode === "blacklist";
   renderListSection();
   await initConnection();
 }
