@@ -21,10 +21,11 @@ never touches your notes, sessions, or account settings at all.
      set up, but never fully "complete" - new distractions need to be added reactively.
 4. While a focus session is running, blocked navigations redirect to a page showing the session's
    remaining time, and any matching tabs already open when the session starts get swept too.
-   Blocking reacts within a second or two if the tab you started/paused/reset the timer from is
-   open in this same browser (StudyLife dispatches a page event a content script picks up and
-   relays), and falls back to polling `GET /api/timerstate` (roughly once a minute - see "Known
-   limitations" below) for a session started elsewhere (another device, the phone app, etc.).
+   Blocking usually reacts within a second or two if the tab you started/paused/reset the timer
+   from is open in this same browser (StudyLife dispatches a page event a content script picks up
+   and relays) - though this instant path isn't fully reliable (see "Known limitations") - and
+   otherwise falls back to polling `GET /api/timerstate` (roughly every 30 seconds) for a session
+   started elsewhere (another device, the phone app, etc.), or whenever the instant path misses.
 5. Once the session ends, every tab FocusGuard itself redirected in step 4 automatically loads
    its original page again - as long as you haven't already navigated that tab somewhere else in
    the meantime, in which case it's left alone.
@@ -35,7 +36,7 @@ automatically - no need to list `en.wikipedia.org`, `de.wikipedia.org`, etc. sep
 ## Permissions
 
 - `storage` - your server URL, API key, and block-list configuration, stored locally only.
-- `alarms` - the once-a-minute poll (see below).
+- `alarms` - the every-30-seconds poll (see below).
 - `declarativeNetRequest` - the actual blocking/redirecting mechanism.
 - `tabs` - reads the URLs of your currently open tabs, purely to redirect already-open matches
   the moment a focus session starts (declarativeNetRequest only ever intercepts *new*
@@ -52,12 +53,20 @@ automatically - no need to list `en.wikipedia.org`, `de.wikipedia.org`, etc. sep
 
 ## Known limitations
 
-- **Up to ~60 seconds of lag when the poll fallback is what's covering a transition** (a session
-  started from a device/browser this extension isn't installed in) - `chrome.alarms` (the only
-  persistent timer primitive available to an MV3 service worker, which can be killed and
-  respawned at any time) has a 1-minute minimum period for installed extensions. Starting/pausing/
-  resetting from the same browser this extension runs in reacts near-instantly instead (see
-  "How it works" above).
+- **Up to ~30 seconds of lag when the poll fallback is what's covering a transition** (a session
+  started from a device/browser this extension isn't installed in, or an instant-path message that
+  didn't arrive - see the next point) - `chrome.alarms` (the only persistent timer primitive
+  available to an MV3 service worker, which can be killed and respawned at any time) has a 30-
+  second minimum period for an unpacked extension (1 minute once/if this ever ships via the Web
+  Store).
+- **The instant same-browser path isn't 100% reliable.** `chrome.runtime.sendMessage` from the
+  content script is supposed to wake an idle MV3 service worker, but Chrome doesn't guarantee that
+  wake-up always succeeds - occasionally the message appears to be dropped rather than queued,
+  and the poll above is what actually catches the transition instead, up to ~30s later. This shows
+  up as "Start reacted instantly, but Pause on the very same session took 20 seconds" - to check
+  which happened, open `chrome://extensions` -> FocusGuard -> "service worker" -> Console: a
+  `received timer-state hint from page` line right after your click means the instant path fired;
+  its absence means only the next `alarm tick` line will pick it up.
 - **The blocked page doesn't say which site you tried to visit** - the redirect is a static
   extension page, not a per-request rewrite, so there's currently no channel carrying the
   original URL along. A future version could add this via `chrome.webNavigation` plus a
