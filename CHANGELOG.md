@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/lukislp/studylife-focus/compare/v1.1.2...v1.2.0) (2026-08-29)
+
+
+### Features
+
+* merge studylife-focustunes into this repo as StudyLife Focus ([3882b6e](https://github.com/lukislp/studylife-focus/commit/3882b6e95d26942a4408e4a7bb527011dabfac66))
+
 ## [1.1.2](https://github.com/lukislp/studylife-focusguard/compare/v1.1.1...v1.1.2) (2026-08-29)
 
 
