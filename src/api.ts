@@ -1,11 +1,10 @@
-import { normalizeServerUrl, type FocusGuardSettings } from "./settings";
+import { normalizeServerUrl, type FeatureSettings } from "./settings";
 
-// Wire shape of StudyLife.Shared.Dtos.TimerStateDto (GET /api/timerstate) - only the fields this
-// extension actually reads are declared; the server sends more (SessionId, IsBreak, CurrentRound,
-// TimerModeId, ClientSequence, UpdatedAt) that background.ts has no use for. scripts/contract-check.mjs
-// diffs TIMER_STATE_FIELDS below against the committed OpenAPI spec's TimerStateDto schema, so a
-// server-side field rename fails CI here instead of silently breaking polling once the Web Store
-// review finally lets a drifted build reach users.
+// Wire shape of StudyLife.Shared.Dtos.TimerStateDto (GET /api/timerstate) - only the fields either
+// feature actually reads are declared (Guard needs all three; Tune only ever reads isRunning, but
+// shares this same payload type and endpoint). scripts/contract-check.mjs diffs TIMER_STATE_FIELDS
+// below against the committed OpenAPI spec's TimerStateDto schema, so a server-side field rename
+// fails CI here instead of silently breaking polling once a build reaches users.
 export interface TimerStateDtoPayload {
   isRunning: boolean;
   phaseEndsAt: string | null;
@@ -19,9 +18,8 @@ export const TIMER_STATE_FIELDS = [
 ] as const satisfies readonly (keyof TimerStateDtoPayload)[];
 
 // A network round trip that hangs forever (unreachable server, no TCP reset) would otherwise
-// leave a poll stuck indefinitely - same reasoning as studylife-capture's REQUEST_TIMEOUT_MS, but
-// shorter here since a poll that hasn't returned by then should just be treated as "try again
-// next alarm" rather than block the service worker.
+// leave a poll stuck indefinitely - a poll that hasn't returned by then is just treated as "try
+// again next alarm/hint" rather than block the service worker.
 const REQUEST_TIMEOUT_MS = 10_000;
 
 export type PollResult =
@@ -31,12 +29,11 @@ export type PollResult =
   | { ok: false; kind: "http"; status: number }
   | { ok: false; kind: "network"; message: string };
 
-// The extension authenticates with a long-lived FocusGuardApiKey (provisioned via the browser
-// consent flow, see connect.ts/exchangeFocusGuardAssertion below) via the server's unified
-// X-Api-Key gate. The FocusGuard slot's ApiKeyScopes entry allows exactly this one endpoint
-// (plus Auth.Whoami) - a leaked key can therefore only ever reveal "is a session running right
-// now", nothing about its content (see the studylife repo's ApiKeyScopes.FocusGuard doc comment).
-export async function pollTimerState(settings: FocusGuardSettings): Promise<PollResult> {
+// Shared by both features - the caller passes whichever of its own (FocusGuardApiKey or
+// FocusTunesApiKey) settings are relevant. Both slots' ApiKeyScopes entries allow exactly this one
+// endpoint (plus Auth.Whoami) - a leaked key can therefore only ever reveal "is a session running
+// right now", nothing about its content (see the studylife repo's ApiKeyScopes doc comments).
+export async function pollTimerState(settings: FeatureSettings): Promise<PollResult> {
   if (typeof navigator !== "undefined" && navigator.onLine === false) {
     return { ok: false, kind: "offline" };
   }
@@ -59,8 +56,11 @@ export async function pollTimerState(settings: FocusGuardSettings): Promise<Poll
   }
 }
 
-export type ExchangeResult =
-  | { ok: true; focusGuardApiKey: string; userId: number }
+// Independent of TKeyField (only the ok:true branch differs by key field name) - exported
+// separately so callers that handle a Guard and a Tune exchange with the same code path (e.g.
+// background.ts's describeExchangeFailure) can type against one shared failure shape instead of
+// an awkward Exclude<..., {ok:true}> derivation.
+export type ExchangeFailure =
   | { ok: false; kind: "offline" }
   // The server predates the browser-connect endpoint - callers should tell the user to update
   // their server instead of retrying.
@@ -68,16 +68,42 @@ export type ExchangeResult =
   | { ok: false; kind: "http"; status: number; message: string }
   | { ok: false; kind: "network"; message: string };
 
+export type ExchangeResult<TKeyField extends string> =
+  | ({ ok: true; userId: number } & Record<TKeyField, string>)
+  | ExchangeFailure;
+
 // Trades the passkey-signed assertion from the browser consent flow (connect.ts /
 // chrome.identity.launchWebAuthFlow) for a FocusGuardApiKey - the server-side counterpart is
-// POST /api/auth/focusguard-assertion-exchange (StudyLife's AuthController). Anonymous POST:
-// the assertion itself is the credential, there's no X-Api-Key to send yet since that's exactly
-// what this call is meant to produce.
-export async function exchangeFocusGuardAssertion(serverUrl: string, assertion: string): Promise<ExchangeResult> {
+// POST /api/auth/focusguard-assertion-exchange (StudyLife's AuthController). Anonymous POST: the
+// assertion itself is the credential, there's no X-Api-Key to send yet since that's exactly what
+// this call is meant to produce.
+export async function exchangeFocusGuardAssertion(
+  serverUrl: string,
+  assertion: string,
+): Promise<ExchangeResult<"focusGuardApiKey">> {
+  return exchangeAssertion(serverUrl, assertion, "focusguard", "focusGuardApiKey");
+}
+
+// Same as above, audience "focustunes" - server-side counterpart is
+// POST /api/auth/focustunes-assertion-exchange. Still an entirely separate exchange/key/audience
+// from Guard's, even though both now ship in the same browser extension package.
+export async function exchangeFocusTunesAssertion(
+  serverUrl: string,
+  assertion: string,
+): Promise<ExchangeResult<"focusTunesApiKey">> {
+  return exchangeAssertion(serverUrl, assertion, "focustunes", "focusTunesApiKey");
+}
+
+async function exchangeAssertion<TKeyField extends string>(
+  serverUrl: string,
+  assertion: string,
+  audiencePath: "focusguard" | "focustunes",
+  keyField: TKeyField,
+): Promise<ExchangeResult<TKeyField>> {
   if (typeof navigator !== "undefined" && navigator.onLine === false) {
     return { ok: false, kind: "offline" };
   }
-  const url = `${normalizeServerUrl(serverUrl)}/api/auth/focusguard-assertion-exchange`;
+  const url = `${normalizeServerUrl(serverUrl)}/api/auth/${audiencePath}-assertion-exchange`;
   try {
     const response = await fetchWithTimeout(url, {
       method: "POST",
@@ -90,16 +116,17 @@ export async function exchangeFocusGuardAssertion(serverUrl: string, assertion: 
     if (!response.ok) {
       return { ok: false, kind: "http", status: response.status, message: await safeText(response) };
     }
-    const body = (await response.json()) as { userId?: number; focusGuardApiKey?: string };
-    if (!body.focusGuardApiKey) {
+    const body = (await response.json()) as { userId?: number } & Partial<Record<TKeyField, string>>;
+    const apiKey = body[keyField];
+    if (!apiKey) {
       return {
         ok: false,
         kind: "http",
         status: response.status,
-        message: "Server response was missing focusGuardApiKey.",
+        message: `Server response was missing ${keyField}.`,
       };
     }
-    return { ok: true, focusGuardApiKey: body.focusGuardApiKey, userId: body.userId ?? 0 };
+    return { ok: true, userId: body.userId ?? 0, [keyField]: apiKey } as ExchangeResult<TKeyField> & { ok: true };
   } catch (error) {
     return { ok: false, kind: "network", message: describeError(error) };
   }

@@ -1,16 +1,20 @@
 // Guards against StudyLife's server-side TimerStateDto drifting out from under this extension's
-// hand-mirrored TimerStateDtoPayload (src/api.ts) without anyone noticing until a Web Store review
-// finally lets the drifted build reach users - by then a fix is days away, not minutes. Diffs the
-// fields this extension actually reads against the main repo's committed OpenAPI spec
-// (docs/api/openapi.json) and confirms the routes it calls still exist. Mirrors
-// studylife-capture's scripts/contract-check.mjs exactly, adapted to this extension's own
-// (much narrower) API surface - GET /api/timerstate and POST /api/auth/focusguard-assertion-exchange,
-// nothing else, matching ApiKeyScopes.FocusGuard in the studylife repo.
+// hand-mirrored TimerStateDtoPayload (src/api.ts) without anyone noticing until a build reaches
+// users with it already broken - by then a fix is days away, not minutes. Diffs the fields this
+// extension actually reads against the main repo's committed OpenAPI spec (docs/api/openapi.json)
+// and confirms the routes it calls still exist. Mirrors studylife-capture's
+// scripts/contract-check.mjs, adapted to this extension's own (much narrower) API surface -
+// GET /api/timerstate, plus POST /api/auth/{focusguard,focustunes}-assertion-exchange (Guard and
+// Tune are still two separate server-side audiences, see connect.ts) - nothing else, matching
+// ApiKeyScopes.FocusGuard/FocusTunes in the studylife repo.
 import { existsSync, readFileSync } from "node:fs";
 
 const API_TS_PATH = new URL("../src/api.ts", import.meta.url);
 const TIMERSTATE_PATH = "/api/timerstate";
-const ASSERTION_EXCHANGE_PATH = "/api/auth/focusguard-assertion-exchange";
+const ASSERTION_EXCHANGE_PATHS = [
+  "/api/auth/focusguard-assertion-exchange",
+  "/api/auth/focustunes-assertion-exchange",
+];
 const DEFAULT_SPEC_SOURCE = "https://raw.githubusercontent.com/lukislp/studylife/main/docs/api/openapi.json";
 
 async function main() {
@@ -23,7 +27,9 @@ async function main() {
   const errors = [];
   errors.push(...checkTimerStateRouteExists(spec));
   errors.push(...checkPayloadFieldsExist(spec, payloadFields));
-  errors.push(...checkAssertionExchangeRouteExists(spec));
+  for (const path of ASSERTION_EXCHANGE_PATHS) {
+    errors.push(...checkAssertionExchangeRouteExists(spec, path));
+  }
 
   if (errors.length > 0) {
     console.error("\nContract check FAILED - the extension's TimerStateDto payload has drifted from the API spec:\n");
@@ -96,16 +102,16 @@ function checkTimerStateRouteExists(spec) {
   return [];
 }
 
-// Guards the browser-connect flow's exchange call (src/api.ts's exchangeFocusGuardAssertion) the
-// same way checkTimerStateRouteExists() guards pollTimerState() - fails loudly here instead of
-// only surfacing as a 404 once a build reaches users.
-function checkAssertionExchangeRouteExists(spec) {
-  const pathItem = spec?.paths?.[ASSERTION_EXCHANGE_PATH];
+// Guards the browser-connect flow's exchange calls (src/api.ts's exchangeFocusGuardAssertion and
+// exchangeFocusTunesAssertion) the same way checkTimerStateRouteExists() guards pollTimerState() -
+// fails loudly here instead of only surfacing as a 404 once a build reaches users.
+function checkAssertionExchangeRouteExists(spec, path) {
+  const pathItem = spec?.paths?.[path];
   if (!pathItem) {
-    return [`Spec has no "${ASSERTION_EXCHANGE_PATH}" path (expected POST, used by the browser-connect flow).`];
+    return [`Spec has no "${path}" path (expected POST, used by the browser-connect flow).`];
   }
   if (!pathItem.post) {
-    return [`Spec is missing POST ${ASSERTION_EXCHANGE_PATH} (exchangeFocusGuardAssertion() depends on it).`];
+    return [`Spec is missing POST ${path} (the corresponding exchange*Assertion() depends on it).`];
   }
   return [];
 }

@@ -1,8 +1,8 @@
 {
-  "name": "studylife-focusguard",
-  "version": "1.1.2",
+  "name": "studylife-focus",
+  "version": "2.0.0",
   "private": true,
-  "description": "Chrome extension: block or allow sites while a StudyLife focus session is running",
+  "description": "Chrome extension: blocks distracting sites and switches Spotify playlists based on your StudyLife focus session",
   "license": "AGPL-3.0",
   "scripts": {
     "build": "node build.mjs",

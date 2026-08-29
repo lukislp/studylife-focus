@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>StudyLife FocusGuard settings</title>
+  <title>StudyLife Focus settings</title>
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="options.css" />
 </head>
@@ -10,49 +10,119 @@
   <main>
     <div class="brand">
       <img class="brand-icon" src="icon48.png" alt="" />
-      <span class="brand-name">StudyLife FocusGuard</span>
+      <span class="brand-name">StudyLife Focus</span>
     </div>
 
-    <section class="card">
-      <div class="card-label">Connection</div>
-      <p class="card-desc">Point this at your own self-hosted StudyLife instance. Just the base address - no path needed.</p>
-      <div class="row">
-        <input class="input" id="server-url" type="text" placeholder="https://studylife.example.com" />
-        <button id="connect-button" type="button" class="btn-primary">Connect</button>
-      </div>
-      <p id="connect-status" class="status"></p>
-      <p id="connection-hint" class="hint"></p>
+    <nav class="tab-bar">
+      <button type="button" class="tab-button active" data-tab="general">General</button>
+      <button type="button" class="tab-button" data-tab="guard">Guard</button>
+      <button type="button" class="tab-button" data-tab="tune">Tune</button>
+    </nav>
+
+    <section id="tab-general" class="tab-panel">
+      <section class="card">
+        <div class="card-label">StudyLife server</div>
+        <p class="card-desc">
+          Point this at your own self-hosted StudyLife instance. Just the base address - no path
+          needed. Save it here first, then connect Guard and/or Tune (or both) from their own tabs.
+        </p>
+        <div class="row">
+          <input class="input" id="server-url" type="text" placeholder="https://studylife.example.com" />
+          <button id="save-server-url" type="button" class="btn-primary">Save</button>
+        </div>
+        <p id="server-url-status" class="status"></p>
+      </section>
     </section>
 
-    <section class="card">
-      <div class="card-label">Blocking mode</div>
-      <p class="card-desc">
-        Applied whenever a focus session is running, based on the endpoint above
-        (<code>GET /api/timerstate</code>). FocusGuard never reads what the session is for -
-        only whether one is active.
-      </p>
-      <div class="toggle-row">
-        <label class="toggle">
-          <input type="checkbox" id="mode-toggle" checked />
-          <span class="toggle-track"></span>
-        </label>
-        <span class="toggle-label" id="mode-toggle-label">
-          Allowlist - block everything except the sites below
-          <span class="toggle-sub" id="mode-toggle-sub">Recommended for deep focus - decide up front what you need, nothing else sneaks in.</span>
-        </span>
-      </div>
+    <section id="tab-guard" class="tab-panel" hidden>
+      <section class="card">
+        <div class="card-label">FocusGuard</div>
+        <p class="card-desc">Blocks or allows sites while a focus session is running.</p>
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="guard-enabled-toggle" checked />
+            <span class="toggle-track"></span>
+          </label>
+          <span class="toggle-label">Enabled</span>
+        </div>
+        <div class="row">
+          <button id="guard-connect-button" type="button" class="btn-primary">Connect Guard</button>
+        </div>
+        <p id="guard-connect-status" class="status"></p>
+        <p id="guard-connection-hint" class="hint"></p>
+      </section>
+
+      <section class="card">
+        <div class="card-label">Blocking mode</div>
+        <p class="card-desc">
+          Applied whenever a focus session is running, based on the endpoint above
+          (<code>GET /api/timerstate</code>). FocusGuard never reads what the session is for -
+          only whether one is active.
+        </p>
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="mode-toggle" checked />
+            <span class="toggle-track"></span>
+          </label>
+          <span class="toggle-label" id="mode-toggle-label">
+            Allowlist - block everything except the sites below
+            <span class="toggle-sub" id="mode-toggle-sub">Recommended for deep focus - decide up front what you need, nothing else sneaks in.</span>
+          </span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-label" id="list-heading">Allowed sites</div>
+        <p class="card-desc" id="list-desc">
+          Just the domain, e.g. <code>wikipedia.org</code> - subdomains are covered automatically, no need to list each one.
+        </p>
+        <div class="row">
+          <input class="input" id="domain-input" type="text" placeholder="example.com" />
+          <button id="add-domain" type="button" class="btn-secondary">Add</button>
+        </div>
+        <ul id="domain-list"></ul>
+      </section>
     </section>
 
-    <section class="card">
-      <div class="card-label" id="list-heading">Allowed sites</div>
-      <p class="card-desc" id="list-desc">
-        Just the domain, e.g. <code>wikipedia.org</code> - subdomains are covered automatically, no need to list each one.
-      </p>
-      <div class="row">
-        <input class="input" id="domain-input" type="text" placeholder="example.com" />
-        <button id="add-domain" type="button" class="btn-secondary">Add</button>
-      </div>
-      <ul id="domain-list"></ul>
+    <section id="tab-tune" class="tab-panel" hidden>
+      <section class="card">
+        <div class="card-label">FocusTunes</div>
+        <p class="card-desc">Switches a Spotify playlist automatically based on your focus session.</p>
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="tune-enabled-toggle" checked />
+            <span class="toggle-track"></span>
+          </label>
+          <span class="toggle-label">Enabled</span>
+        </div>
+        <div class="row">
+          <button id="tune-connect-button" type="button" class="btn-primary">Connect Tune</button>
+        </div>
+        <p id="tune-connect-status" class="status"></p>
+        <p id="tune-connection-hint" class="hint"></p>
+      </section>
+
+      <section class="card">
+        <div class="card-label">Spotify</div>
+        <p class="card-desc">
+          Spotify requires every app to register its own client - create a free one at
+          <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a>,
+          set its redirect URI to the one shown below, and paste the client ID here.
+        </p>
+        <label class="field-label" for="redirect-uri-display">Redirect URI to register with Spotify</label>
+        <input class="input" id="redirect-uri-display" type="text" readonly />
+        <label class="field-label" for="spotify-client-id">Spotify client ID</label>
+        <input class="input" id="spotify-client-id" type="text" placeholder="your Spotify app's client ID" />
+        <label class="field-label" for="focus-playlist">Playlist while a session is running</label>
+        <input class="input" id="focus-playlist" type="text" placeholder="spotify:playlist:..." />
+        <label class="field-label" for="break-playlist">Playlist on break / after a session (optional - pauses if empty)</label>
+        <input class="input" id="break-playlist" type="text" placeholder="spotify:playlist:... (optional)" />
+        <div class="row" style="margin-top:0.75rem">
+          <button id="save-spotify-config" type="button" class="btn-secondary">Save</button>
+          <button id="spotify-connect-button" type="button" class="btn-primary">Connect Spotify</button>
+        </div>
+        <p id="spotify-status" class="status"></p>
+      </section>
     </section>
   </main>
   <script type="module" src="options.js"></script>

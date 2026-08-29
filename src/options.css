@@ -6,6 +6,36 @@ main {
   padding: 2rem 1.5rem 4rem;
 }
 
+/* === Tabs: General / Guard / Tune === */
+.tab-bar {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tab-button:hover {
+  color: var(--text);
+}
+
+.tab-button.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
 section.card {
   margin-bottom: 1.25rem;
 }
@@ -39,5 +69,21 @@ section.card {
 
 #domain-list li button {
   padding: 0.15rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  margin: 0.85rem 0 0.35rem;
+}
+
+#redirect-uri-display {
+  color: var(--text2);
+  font-family: var(--font-mono);
   font-size: 0.78rem;
 }

@@ -14,7 +14,7 @@ if (!existsSync("dist")) {
 
 const manifest = JSON.parse(readFileSync("dist/manifest.json", "utf-8"));
 mkdirSync("release", { recursive: true });
-const outputPath = `release/studylife-focusguard-v${manifest.version}.zip`;
+const outputPath = `release/studylife-focus-v${manifest.version}.zip`;
 
 const output = createWriteStream(outputPath);
 const archive = new ZipArchive({ zlib: { level: 9 } });
