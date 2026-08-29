@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { loadSettings, loadStoredSettings, normalizeServerUrl, saveSettings } from "../src/settings";
+import { loadGuardSettings, loadStoredSettings, loadTuneSettings, normalizeServerUrl, saveSettings } from "../src/settings";
 import { createChromeStorageStub } from "./chrome-storage-stub";
 
 const storage = createChromeStorageStub();
@@ -42,25 +42,47 @@ describe("normalizeServerUrl", () => {
   });
 });
 
-describe("loadStoredSettings vs loadSettings", () => {
-  it("returns a URL-only draft from loadStoredSettings but null from loadSettings", async () => {
-    await saveSettings({ serverUrl: "https://studylife.example.com", apiKey: "" });
+describe("loadStoredSettings", () => {
+  it("returns a URL-only draft with empty keys when nothing has connected yet", async () => {
+    await saveSettings({ serverUrl: "https://studylife.example.com", guardApiKey: "", tuneApiKey: "" });
     await expect(loadStoredSettings()).resolves.toEqual({
       serverUrl: "https://studylife.example.com",
-      apiKey: "",
+      guardApiKey: "",
+      tuneApiKey: "",
     });
-    await expect(loadSettings()).resolves.toBeNull();
   });
 
-  it("returns full settings from both once an apiKey is present", async () => {
-    const settings = { serverUrl: "https://studylife.example.com", apiKey: "secret" };
-    await saveSettings(settings);
-    await expect(loadStoredSettings()).resolves.toEqual(settings);
-    await expect(loadSettings()).resolves.toEqual(settings);
+  it("returns null when nothing is stored at all", async () => {
+    await expect(loadStoredSettings()).resolves.toBeNull();
+  });
+
+  it("keeps Guard's and Tune's keys independent - connecting one never affects the other", async () => {
+    await saveSettings({ serverUrl: "https://studylife.example.com", guardApiKey: "guard-secret", tuneApiKey: "" });
+    await expect(loadStoredSettings()).resolves.toEqual({
+      serverUrl: "https://studylife.example.com",
+      guardApiKey: "guard-secret",
+      tuneApiKey: "",
+    });
+  });
+});
+
+describe("loadGuardSettings / loadTuneSettings", () => {
+  const serverUrl = "https://studylife.example.com";
+
+  it("returns null for a feature with no key yet, even if the other feature is connected", async () => {
+    await saveSettings({ serverUrl, guardApiKey: "guard-secret", tuneApiKey: "" });
+    await expect(loadGuardSettings()).resolves.toEqual({ serverUrl, apiKey: "guard-secret" });
+    await expect(loadTuneSettings()).resolves.toBeNull();
+  });
+
+  it("returns settings for both features once both are connected", async () => {
+    await saveSettings({ serverUrl, guardApiKey: "guard-secret", tuneApiKey: "tune-secret" });
+    await expect(loadGuardSettings()).resolves.toEqual({ serverUrl, apiKey: "guard-secret" });
+    await expect(loadTuneSettings()).resolves.toEqual({ serverUrl, apiKey: "tune-secret" });
   });
 
   it("returns null from both when nothing is stored", async () => {
-    await expect(loadStoredSettings()).resolves.toBeNull();
-    await expect(loadSettings()).resolves.toBeNull();
+    await expect(loadGuardSettings()).resolves.toBeNull();
+    await expect(loadTuneSettings()).resolves.toBeNull();
   });
 });

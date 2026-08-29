@@ -1,5 +1,5 @@
 import { loadLastPollSnapshot } from "./pollSnapshot";
-import { loadSettings } from "./settings";
+import { loadStoredSettings } from "./settings";
 
 const countdownEl = document.getElementById("countdown") as HTMLParagraphElement;
 const hintEl = document.getElementById("until-hint") as HTMLParagraphElement;
@@ -10,9 +10,9 @@ const openLink = document.getElementById("open-studylife") as HTMLAnchorElement;
 // per-request substitution, so there is nothing to display beyond "you're in a focus session"
 // (see the README's "known limitations" for what a per-site "you tried to visit X" would need).
 async function render(): Promise<void> {
-  const [snapshot, settings] = await Promise.all([loadLastPollSnapshot(), loadSettings()]);
+  const [snapshot, settings] = await Promise.all([loadLastPollSnapshot(), loadStoredSettings()]);
 
-  if (settings) {
+  if (settings?.serverUrl) {
     openLink.href = settings.serverUrl;
     openLink.hidden = false;
   }

@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearPendingConnect,
+  connectMessageType,
   describeConnectResult,
+  isConnectMessage,
   parseAuthRedirect,
   setPendingConnect,
-  takePendingConnect,
+  takePendingConnects,
   type ConnectResult,
 } from "../src/connect";
 import { createChromeStorageStub } from "./chrome-storage-stub";
@@ -14,6 +16,29 @@ const storage = createChromeStorageStub();
 beforeEach(() => {
   storage.reset();
   storage.install();
+});
+
+describe("connectMessageType / isConnectMessage", () => {
+  it("produces a distinct type per audience", () => {
+    expect(connectMessageType("focusguard")).not.toBe(connectMessageType("focustunes"));
+  });
+
+  it("recognizes a well-formed message for either audience", () => {
+    expect(isConnectMessage({ type: connectMessageType("focusguard"), audience: "focusguard", serverUrl: "https://x" })).toBe(true);
+    expect(isConnectMessage({ type: connectMessageType("focustunes"), audience: "focustunes", serverUrl: "https://x" })).toBe(true);
+  });
+
+  it("rejects a message whose type doesn't match its own declared audience", () => {
+    expect(isConnectMessage({ type: connectMessageType("focusguard"), audience: "focustunes", serverUrl: "https://x" })).toBe(false);
+  });
+
+  it("rejects unrelated or malformed shapes", () => {
+    expect(isConnectMessage(null)).toBe(false);
+    expect(isConnectMessage(undefined)).toBe(false);
+    expect(isConnectMessage({})).toBe(false);
+    expect(isConnectMessage({ type: connectMessageType("focusguard"), audience: "not-real", serverUrl: "https://x" })).toBe(false);
+    expect(isConnectMessage({ type: connectMessageType("focusguard"), audience: "focusguard" })).toBe(false);
+  });
 });
 
 describe("parseAuthRedirect", () => {
@@ -92,50 +117,66 @@ describe("describeConnectResult", () => {
   });
 });
 
-describe("pending connect marker", () => {
+describe("pending connect markers", () => {
   const serverUrl = "https://studylife.example.com";
   const origin = "https://studylife.example.com/*";
 
   it("round-trips through set -> take with a matching granted origin", async () => {
-    await setPendingConnect(serverUrl);
-    await expect(takePendingConnect([origin])).resolves.toBe(serverUrl);
+    await setPendingConnect("focusguard", serverUrl);
+    await expect(takePendingConnects([origin])).resolves.toEqual([{ audience: "focusguard", serverUrl }]);
   });
 
-  it("returns null and leaves the marker when granted origins don't match", async () => {
-    await setPendingConnect(serverUrl);
-    await expect(takePendingConnect(["https://other.example.com/*"])).resolves.toBeNull();
-    await expect(takePendingConnect([origin])).resolves.toBe(serverUrl);
+  it("returns both audiences' pending markers if both were staked against the same origin", async () => {
+    await setPendingConnect("focusguard", serverUrl);
+    await setPendingConnect("focustunes", serverUrl);
+    const result = await takePendingConnects([origin]);
+    expect(result).toHaveLength(2);
+    expect(result.map((r) => r.audience).sort()).toEqual(["focusguard", "focustunes"]);
   });
 
-  it("returns null and cleans up an expired marker", async () => {
+  it("keeps each audience's marker independent - taking one doesn't consume the other", async () => {
+    await setPendingConnect("focusguard", serverUrl);
+    await takePendingConnects([origin]);
+    await setPendingConnect("focustunes", serverUrl);
+    await expect(takePendingConnects([origin])).resolves.toEqual([{ audience: "focustunes", serverUrl }]);
+  });
+
+  it("returns nothing and leaves the marker when granted origins don't match", async () => {
+    await setPendingConnect("focusguard", serverUrl);
+    await expect(takePendingConnects(["https://other.example.com/*"])).resolves.toEqual([]);
+    await expect(takePendingConnects([origin])).resolves.toEqual([{ audience: "focusguard", serverUrl }]);
+  });
+
+  it("cleans up an expired marker", async () => {
     vi.useFakeTimers();
     try {
       const start = Date.now();
       vi.setSystemTime(start);
-      await setPendingConnect(serverUrl);
+      await setPendingConnect("focusguard", serverUrl);
       vi.setSystemTime(start + 2 * 60 * 1000 + 1); // just past the 2-minute TTL
-      await expect(takePendingConnect([origin])).resolves.toBeNull();
+      await expect(takePendingConnects([origin])).resolves.toEqual([]);
     } finally {
       vi.useRealTimers();
     }
-    expect(storage.raw().pendingConnect).toBeUndefined();
+    expect(storage.raw()["pendingConnect:focusguard"]).toBeUndefined();
   });
 
-  it("returns null and cleans up a malformed marker", async () => {
-    storage.raw().pendingConnect = { serverUrl: 123, ts: "not-a-number" };
-    await expect(takePendingConnect([origin])).resolves.toBeNull();
-    expect(storage.raw().pendingConnect).toBeUndefined();
+  it("cleans up a malformed marker", async () => {
+    storage.raw()["pendingConnect:focusguard"] = { serverUrl: 123, ts: "not-a-number" };
+    await expect(takePendingConnects([origin])).resolves.toEqual([]);
+    expect(storage.raw()["pendingConnect:focusguard"]).toBeUndefined();
   });
 
-  it("returns null on a second take after the marker was already consumed", async () => {
-    await setPendingConnect(serverUrl);
-    await takePendingConnect([origin]);
-    await expect(takePendingConnect([origin])).resolves.toBeNull();
+  it("returns nothing on a second take after the marker was already consumed", async () => {
+    await setPendingConnect("focusguard", serverUrl);
+    await takePendingConnects([origin]);
+    await expect(takePendingConnects([origin])).resolves.toEqual([]);
   });
 
-  it("clearPendingConnect removes the marker outright", async () => {
-    await setPendingConnect(serverUrl);
-    await clearPendingConnect();
-    await expect(takePendingConnect([origin])).resolves.toBeNull();
+  it("clearPendingConnect removes only that audience's marker", async () => {
+    await setPendingConnect("focusguard", serverUrl);
+    await setPendingConnect("focustunes", serverUrl);
+    await clearPendingConnect("focusguard");
+    await expect(takePendingConnects([origin])).resolves.toEqual([{ audience: "focustunes", serverUrl }]);
   });
 });

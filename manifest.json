@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "StudyLife FocusGuard",
-  "version": "1.1.2",
-  "description": "Block or allow sites while a StudyLife focus session is running.",
+  "name": "StudyLife Focus",
+  "version": "2.0.0",
+  "description": "Blocks distracting sites and switches Spotify playlists based on your StudyLife focus session.",
   "permissions": [
     "storage",
     "alarms",
@@ -14,7 +14,9 @@
   ],
   "optional_host_permissions": [
     "http://*/*",
-    "https://*/*"
+    "https://*/*",
+    "https://accounts.spotify.com/*",
+    "https://api.spotify.com/*"
   ],
   "background": {
     "service_worker": "background.js",
