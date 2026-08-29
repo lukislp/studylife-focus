@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/lukislp/studylife-focusguard/compare/v1.1.0...v1.1.1) (2026-08-29)
+
+
+### Bug Fixes
+
+* poll every 30 seconds, log the poll/hint pipeline for real ([84e3a87](https://github.com/lukislp/studylife-focusguard/commit/84e3a871dabe0724940c5beac4c65143200c21eb))
+
 # [1.1.0](https://github.com/lukislp/studylife-focusguard/compare/v1.0.1...v1.1.0) (2026-08-29)
 
 
