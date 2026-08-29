@@ -12,13 +12,13 @@ import { BLOCKED_PAGE_PATH, computeRules, isDomainAllowed, MANAGED_RULE_IDS, typ
 import { loadSettings, normalizeServerUrl, saveSettings } from "./settings";
 import { computeTimerHintMatch, isTimerHintMessage, TIMER_HINT_SCRIPT_ID } from "./timerHintRegistration";
 
-// Chrome's documented minimum for a repeating alarm in an installed (non-dev-mode) extension is
-// 1 minute - a focus session can therefore take up to ~60s to actually start blocking after the
-// timer starts server-side. Acceptable trade-off (see README): there is no faster persistent
-// timer primitive available to an MV3 service worker, which can otherwise be killed and
-// respawned at any time (setInterval would not survive that).
+// Same reasoning as studylife-focustunes: Chrome only clamps chrome.alarms to a 1-minute minimum
+// for extensions installed from the Web Store - unpacked ones (which FocusGuard is, for now) can
+// go down to 30 seconds. This is purely the FALLBACK cadence for a session started from a
+// device/browser this extension isn't installed in; see the timer-hint content script below for
+// the (not fully reliable - see log() calls throughout this file) instant path.
 const POLL_ALARM_NAME = "focusguard-poll";
-const POLL_PERIOD_MINUTES = 1;
+const POLL_PERIOD_MINUTES = 0.5;
 
 // Persisted (not just in-memory) so a service-worker restart mid-session doesn't misread a fresh
 // "not running" as a transition and skip the tab sweep it already did before being killed.
@@ -30,6 +30,13 @@ const LAST_ACTIVE_KEY = "lastKnownActive";
 // on browser restart is the right behavior (a tab that no longer exists has nothing to restore).
 const SWEPT_TABS_KEY = "sweptTabOriginalUrls";
 
+// Visible in chrome://extensions -> FocusGuard -> "service worker" -> Console. Deliberately kept
+// (not stripped in production builds) - this whole poll/hint pipeline has no other way to be
+// diagnosed live, since none of it has any user-facing surface of its own.
+function log(message: string): void {
+  console.log(`[FocusGuard ${new Date().toISOString()}] ${message}`);
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create(POLL_ALARM_NAME, { periodInMinutes: POLL_PERIOD_MINUTES });
   void resyncTimerHintContentScript();
@@ -40,7 +47,9 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === POLL_ALARM_NAME) void pollAndApply();
+  if (alarm.name !== POLL_ALARM_NAME) return;
+  log("alarm tick - scheduled poll");
+  void pollAndApply();
 });
 
 // ── Instant reaction via a page-side hint (see timerHint.ts / interop.js's
@@ -69,7 +78,11 @@ async function syncTimerHintContentScript(serverUrl: string | null): Promise<voi
 chrome.runtime.onMessage.addListener((message: unknown) => {
   if (!isTimerHintMessage(message)) return undefined;
   // Just a "check now" nudge, not a trusted state - pollAndApply() re-derives the truth from the
-  // extension's own authenticated GET /api/timerstate exactly as the alarm-driven call does.
+  // extension's own authenticated GET /api/timerstate exactly as the alarm-driven call does. If
+  // this log line is ever MISSING right after a Start/Pause/Reset click, the page's event either
+  // didn't fire, or (more likely - see README) chrome.runtime.sendMessage failed to reach/wake a
+  // service worker that had already gone idle, and only the alarm tick above will catch up on it.
+  log("received timer-state hint from page - polling now");
   void pollAndApply();
   return undefined;
 });
@@ -83,7 +96,10 @@ async function pollAndApply(): Promise<void> {
   // rather than either blocking or unblocking - a transient network hiccup must never suddenly
   // block every site, and an expired key must never silently stop blocking mid-session either.
   // The next successful poll (or a manual reconnect for "unauthorized") resolves it either way.
-  if (!result.ok) return;
+  if (!result.ok) {
+    log(`poll failed (${result.kind}) - leaving current rules/tabs untouched`);
+    return;
+  }
 
   await saveLastPollSnapshot({
     isRunning: result.state.isRunning,
@@ -104,6 +120,7 @@ async function pollAndApply(): Promise<void> {
 
   const previouslyActive = ((await chrome.storage.session.get(LAST_ACTIVE_KEY))[LAST_ACTIVE_KEY] as boolean | undefined) ?? false;
   await chrome.storage.session.set({ [LAST_ACTIVE_KEY]: ruleConfig.active });
+  log(`poll ok - server isRunning=${result.state.isRunning}, previouslyActive=${previouslyActive}`);
 
   // Recomputed and reapplied on EVERY poll, not only on a detected transition - idempotent, so a
   // service-worker restart that missed the exact start/stop edge still converges to the correct
@@ -118,9 +135,13 @@ async function pollAndApply(): Promise<void> {
   // rules changed needs an explicit push. Gated on the transition (not "ruleConfig.active" alone)
   // so this doesn't re-scan every open tab on every single poll while a session is already running.
   if (ruleConfig.active && !previouslyActive) {
+    log("transition detected: session STARTED - sweeping open tabs");
     await sweepOpenTabs(ruleConfig);
   } else if (!ruleConfig.active && previouslyActive) {
+    log("transition detected: session ENDED - restoring swept tabs");
     await restoreSweptTabs();
+  } else {
+    log("no transition - rules reapplied idempotently, no tab sweep/restore needed");
   }
 }
 
@@ -153,6 +174,7 @@ async function sweepOpenTabs(config: RuleConfig): Promise<void> {
     const existing = ((await chrome.storage.session.get(SWEPT_TABS_KEY))[SWEPT_TABS_KEY] as Record<number, string> | undefined) ?? {};
     await chrome.storage.session.set({ [SWEPT_TABS_KEY]: { ...existing, ...originalUrls } });
   }
+  log(`swept ${Object.keys(originalUrls).length} tab(s) to the blocked page`);
 }
 
 // Sends every tab this extension itself redirected to the blocked page back to whatever it was
@@ -161,18 +183,25 @@ async function sweepOpenTabs(config: RuleConfig): Promise<void> {
 // the session was running, that's a deliberate choice this must not undo.
 async function restoreSweptTabs(): Promise<void> {
   const stored = (await chrome.storage.session.get(SWEPT_TABS_KEY))[SWEPT_TABS_KEY] as Record<number, string> | undefined;
-  if (!stored || Object.keys(stored).length === 0) return;
+  if (!stored || Object.keys(stored).length === 0) {
+    log("restore: nothing was swept - nothing to restore");
+    return;
+  }
 
   const blockedUrl = chrome.runtime.getURL(BLOCKED_PAGE_PATH);
+  let restored = 0;
   for (const [tabIdKey, originalUrl] of Object.entries(stored)) {
     const tabId = Number(tabIdKey);
     const tab = await chrome.tabs.get(tabId).catch(() => null); // tab may have been closed since
     if (!tab || tab.url !== blockedUrl) continue;
-    await chrome.tabs.update(tabId, { url: originalUrl }).catch(() => {
-      // Closed between the get() above and this update() - nothing left to restore, ignore.
-    });
+    await chrome.tabs.update(tabId, { url: originalUrl })
+      .then(() => { restored++; })
+      .catch(() => {
+        // Closed between the get() above and this update() - nothing left to restore, ignore.
+      });
   }
   await chrome.storage.session.remove(SWEPT_TABS_KEY);
+  log(`restored ${restored} of ${Object.keys(stored).length} previously-swept tab(s)`);
 }
 
 function hostnameOf(url: string): string | null {

@@ -7,8 +7,8 @@ StudyLife server, and your own device's local browser storage.
 ## What this extension reads
 
 - **Whether a focus session is currently running**, via `GET /api/timerstate` on the StudyLife
-  server you configure, roughly once a minute (faster if you started/paused/reset the timer from
-  the same browser - see the next point). The extension's API key cannot read anything else
+  server you configure, roughly every 30 seconds (faster if you started/paused/reset the timer
+  from the same browser - see the next point). The extension's API key cannot read anything else
   from your account - not your notes, sessions, courses, or settings (see the `studylife` repo's
   `ApiKeyScopes.FocusGuard` for the server-enforced scope).
 - **A single browser event StudyLife's own page dispatches** on your server's origin only, via a
