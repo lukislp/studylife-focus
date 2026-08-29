@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/lukislp/studylife-focusguard/compare/v1.1.1...v1.1.2) (2026-08-29)
+
+
+### Bug Fixes
+
+* retry a hint-triggered poll to catch a slow-landing save ([e8910fa](https://github.com/lukislp/studylife-focusguard/commit/e8910fa60c5cdb0300d585a72abbc64929f0973b))
+
 ## [1.1.1](https://github.com/lukislp/studylife-focusguard/compare/v1.1.0...v1.1.1) (2026-08-29)
 
 
