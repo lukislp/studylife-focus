@@ -26,6 +26,14 @@ const moduleBuildOptions = {
   format: "esm",
 };
 
+// timerHint.ts is a dynamically-registered content script (chrome.scripting.registerContentScripts
+// in background.ts) - those run as classic scripts, not ES modules, so it needs its own IIFE build.
+const contentScriptBuildOptions = {
+  ...sharedOptions,
+  entryPoints: ["src/timerHint.ts"],
+  format: "iife",
+};
+
 const STATIC_FILES = [
   "manifest.json",
   "src/theme.css",
@@ -54,12 +62,12 @@ function copyStaticFiles() {
 }
 
 if (watch) {
-  const ctx = await context(moduleBuildOptions);
-  await ctx.watch();
+  const [moduleCtx, contentScriptCtx] = await Promise.all([context(moduleBuildOptions), context(contentScriptBuildOptions)]);
+  await Promise.all([moduleCtx.watch(), contentScriptCtx.watch()]);
   copyStaticFiles();
   console.log("Watching for changes...");
 } else {
-  await build(moduleBuildOptions);
+  await Promise.all([build(moduleBuildOptions), build(contentScriptBuildOptions)]);
   copyStaticFiles();
   console.log("Built to dist/");
 }

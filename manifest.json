@@ -9,7 +9,8 @@
     "tabs",
     "notifications",
     "declarativeNetRequest",
-    "identity"
+    "identity",
+    "scripting"
   ],
   "optional_host_permissions": [
     "http://*/*",
