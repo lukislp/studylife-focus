@@ -7,9 +7,15 @@ StudyLife server, and your own device's local browser storage.
 ## What this extension reads
 
 - **Whether a focus session is currently running**, via `GET /api/timerstate` on the StudyLife
-  server you configure, roughly once a minute. The extension's API key cannot read anything else
+  server you configure, roughly once a minute (faster if you started/paused/reset the timer from
+  the same browser - see the next point). The extension's API key cannot read anything else
   from your account - not your notes, sessions, courses, or settings (see the `studylife` repo's
   `ApiKeyScopes.FocusGuard` for the server-enforced scope).
+- **A single browser event StudyLife's own page dispatches** on your server's origin only, via a
+  small content script registered for exactly that one origin. The script listens for that one
+  named event and nothing else - it never reads the page's DOM, its content, or any other data on
+  it; hearing the event just makes the extension poll the endpoint above immediately instead of
+  waiting for its next scheduled check.
 - **The URLs of your currently open browser tabs**, compared locally against your own block
   list to decide which already-open tabs to redirect when a focus session starts. This
   comparison happens entirely on your device - tab URLs are never sent anywhere, not even to
@@ -35,7 +41,8 @@ own StudyLife server as part of authenticating the poll above:
 
 - Never collects analytics, telemetry, or crash reports.
 - Never contacts any server other than the one you explicitly configure.
-- Never reads the content of any page you visit.
+- Never reads the content of any page you visit, including your own StudyLife pages - the
+  content script mentioned above only listens for one specific named browser event.
 - Never writes anything to your StudyLife account - the API key it uses cannot, even if it
   wanted to (read-only by server-side design).
 

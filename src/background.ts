@@ -10,6 +10,7 @@ import {
 import { saveLastPollSnapshot } from "./pollSnapshot";
 import { BLOCKED_PAGE_PATH, computeRules, isDomainAllowed, MANAGED_RULE_IDS, type RuleConfig } from "./rules";
 import { loadSettings, normalizeServerUrl, saveSettings } from "./settings";
+import { computeTimerHintMatch, isTimerHintMessage, TIMER_HINT_SCRIPT_ID } from "./timerHintRegistration";
 
 // Chrome's documented minimum for a repeating alarm in an installed (non-dev-mode) extension is
 // 1 minute - a focus session can therefore take up to ~60s to actually start blocking after the
@@ -31,13 +32,46 @@ const SWEPT_TABS_KEY = "sweptTabOriginalUrls";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create(POLL_ALARM_NAME, { periodInMinutes: POLL_PERIOD_MINUTES });
+  void resyncTimerHintContentScript();
 });
 chrome.runtime.onStartup.addListener(() => {
   chrome.alarms.create(POLL_ALARM_NAME, { periodInMinutes: POLL_PERIOD_MINUTES });
+  void resyncTimerHintContentScript();
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === POLL_ALARM_NAME) void pollAndApply();
+});
+
+// ── Instant reaction via a page-side hint (see timerHint.ts / interop.js's
+// dispatchTimerStateChanged) - the alarm-driven poll above stays as the fallback for a session
+// started from a device/browser that isn't running this extension. ──
+
+async function resyncTimerHintContentScript(): Promise<void> {
+  const settings = await loadSettings();
+  await syncTimerHintContentScript(settings?.serverUrl ?? null);
+}
+
+async function syncTimerHintContentScript(serverUrl: string | null): Promise<void> {
+  const existing = await chrome.scripting.getRegisteredContentScripts({ ids: [TIMER_HINT_SCRIPT_ID] });
+  if (existing.length > 0) {
+    await chrome.scripting.unregisterContentScripts({ ids: [TIMER_HINT_SCRIPT_ID] });
+  }
+
+  const match = computeTimerHintMatch(serverUrl);
+  if (!match) return; // not connected, or a malformed stored URL - nothing to register
+
+  await chrome.scripting.registerContentScripts([
+    { id: TIMER_HINT_SCRIPT_ID, matches: [match], js: ["timerHint.js"], runAt: "document_idle" },
+  ]);
+}
+
+chrome.runtime.onMessage.addListener((message: unknown) => {
+  if (!isTimerHintMessage(message)) return undefined;
+  // Just a "check now" nudge, not a trusted state - pollAndApply() re-derives the truth from the
+  // extension's own authenticated GET /api/timerstate exactly as the alarm-driven call does.
+  void pollAndApply();
+  return undefined;
 });
 
 async function pollAndApply(): Promise<void> {
@@ -237,6 +271,7 @@ async function handleConnectRequest(rawServerUrl: string): Promise<ConnectResult
   }
 
   await saveSettings({ serverUrl, apiKey: exchange.focusGuardApiKey });
+  await syncTimerHintContentScript(serverUrl);
   await pollAndApply(); // pick up the current session state immediately, not up to a minute later
   return finishConnect({ ok: true, serverUrl });
 }
