@@ -75,17 +75,37 @@ async function syncTimerHintContentScript(serverUrl: string | null): Promise<voi
   ]);
 }
 
+// A hint fires the instant the page's LOCAL state changes, but the PUT that actually persists
+// that state to the server is a separate, unordered network request - confirmed live (see
+// README): a hint-triggered poll landing ~40ms later read the OLD state, because the PUT simply
+// hadn't landed yet, and nothing caught the real change until the next 30s alarm tick. Retrying a
+// couple of times shortly after closes that gap without waiting for the alarm fallback.
+const HINT_RETRY_DELAYS_MS = [1000, 2500];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 chrome.runtime.onMessage.addListener((message: unknown) => {
   if (!isTimerHintMessage(message)) return undefined;
   // Just a "check now" nudge, not a trusted state - pollAndApply() re-derives the truth from the
   // extension's own authenticated GET /api/timerstate exactly as the alarm-driven call does. If
   // this log line is ever MISSING right after a Start/Pause/Reset click, the page's event either
-  // didn't fire, or (more likely - see README) chrome.runtime.sendMessage failed to reach/wake a
-  // service worker that had already gone idle, and only the alarm tick above will catch up on it.
+  // didn't fire, or chrome.runtime.sendMessage failed to reach/wake a service worker that had
+  // already gone idle - either way, only the alarm tick above will eventually catch up on it.
   log("received timer-state hint from page - polling now");
-  void pollAndApply();
+  void pollWithHintRetries();
   return undefined;
 });
+
+async function pollWithHintRetries(): Promise<void> {
+  await pollAndApply();
+  for (const delayMs of HINT_RETRY_DELAYS_MS) {
+    await sleep(delayMs);
+    log(`hint retry poll after ${delayMs}ms (in case the initial poll raced ahead of the server-side save)`);
+    await pollAndApply();
+  }
+}
 
 async function pollAndApply(): Promise<void> {
   const settings = await loadSettings();

@@ -59,14 +59,16 @@ automatically - no need to list `en.wikipedia.org`, `de.wikipedia.org`, etc. sep
   available to an MV3 service worker, which can be killed and respawned at any time) has a 30-
   second minimum period for an unpacked extension (1 minute once/if this ever ships via the Web
   Store).
-- **The instant same-browser path isn't 100% reliable.** `chrome.runtime.sendMessage` from the
-  content script is supposed to wake an idle MV3 service worker, but Chrome doesn't guarantee that
-  wake-up always succeeds - occasionally the message appears to be dropped rather than queued,
-  and the poll above is what actually catches the transition instead, up to ~30s later. This shows
-  up as "Start reacted instantly, but Pause on the very same session took 20 seconds" - to check
-  which happened, open `chrome://extensions` -> FocusGuard -> "service worker" -> Console: a
-  `received timer-state hint from page` line right after your click means the instant path fired;
-  its absence means only the next `alarm tick` line will pick it up.
+- **The instant same-browser path can occasionally lose a race.** The page-side event fires the
+  moment the timer's LOCAL state changes, but the `PUT /api/timerstate` that actually persists that
+  state to the server is a separate, unordered network request - confirmed live via the service
+  worker's own logs: a hint-triggered poll landing ~40ms after the click read the OLD server state,
+  because the save simply hadn't landed yet, and only the next 30s alarm tick caught the real
+  change. Mitigated (not eliminated - a sufficiently slow save could still outlast it) by retrying
+  the poll twice more, 1s and 2.5s after the first one, before falling back to the alarm cadence.
+  Open `chrome://extensions` -> FocusGuard -> "service worker" -> Console to watch this live: a
+  `received timer-state hint from page` line right after your click confirms the instant path
+  fired, and any `hint retry poll` lines after it show the race being caught.
 - **The blocked page doesn't say which site you tried to visit** - the redirect is a static
   extension page, not a per-request rewrite, so there's currently no channel carrying the
   original URL along. A future version could add this via `chrome.webNavigation` plus a
