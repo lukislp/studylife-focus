@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/lukislp/studylife-focusguard/compare/v1.0.1...v1.1.0) (2026-08-29)
+
+
+### Features
+
+* react instantly to a same-browser start/pause/reset ([78407f5](https://github.com/lukislp/studylife-focusguard/commit/78407f557ad7de971a4e4c5ce77cbf9619cbef96))
+
 ## [1.0.1](https://github.com/lukislp/studylife-focusguard/compare/v1.0.0...v1.0.1) (2026-08-28)
 
 
