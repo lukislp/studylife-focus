@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/lukislp/studylife-focus/compare/v1.2.0...v1.2.1) (2026-08-30)
+
+
+### Bug Fixes
+
+* request the blocking host permission so new-tab navigations get blocked ([8f91814](https://github.com/lukislp/studylife-focus/commit/8f9181456b05c14d8311a334a4630aa819416f57))
+
 # [1.2.0](https://github.com/lukislp/studylife-focus/compare/v1.1.2...v1.2.0) (2026-08-29)
 
 

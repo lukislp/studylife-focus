@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "StudyLife Focus",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Blocks distracting sites and switches Spotify playlists based on your StudyLife focus session.",
   "permissions": [
     "storage",

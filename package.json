@@ -1,6 +1,6 @@
 {
   "name": "studylife-focus",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Chrome extension: blocks distracting sites and switches Spotify playlists based on your StudyLife focus session",
   "license": "AGPL-3.0",
