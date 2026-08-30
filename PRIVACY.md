@@ -47,6 +47,9 @@ service each item authenticates with:
 - Tune's Spotify client ID, focus/break playlist URIs, and Spotify OAuth tokens (obtained directly
   from Spotify via its own PKCE authorization flow - StudyLife is never involved in obtaining or
   refreshing this token, and never sees it).
+- The URLs of tabs Guard redirected to the blocked page, only until the session ends - kept
+  temporarily so those tabs can be sent back to what they were showing before, cleared once
+  restored. Held in session storage (cleared on browser restart), never transmitted anywhere.
 
 ## What this extension never does
 

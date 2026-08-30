@@ -3,6 +3,7 @@ import {
   clearPendingConnect,
   connectMessageType,
   describeConnectResult,
+  GUARD_BLOCKING_ORIGINS,
   requestHostPermission,
   setPendingConnect,
   type ConnectAudience,
@@ -98,10 +99,16 @@ async function connectFeature(
   connectButton.disabled = true;
 
   const originPattern = parsedUrl.origin + "/*";
-  if (!(await chrome.permissions.contains({ origins: [originPattern] }))) {
+  // Guard's connect also needs the broad blocking-permission grant (see connect.ts's
+  // GUARD_BLOCKING_ORIGINS comment) - bundled into the SAME prompt as the server origin rather
+  // than a second one, and re-checked/re-requested on every connect (not just the first) so an
+  // already-connected Guard that's missing it (e.g. from before this fix existed) picks it up the
+  // next time the user reconnects, without needing a separate "grant this too" flow.
+  const neededOrigins = audience === "focusguard" ? [originPattern, ...GUARD_BLOCKING_ORIGINS] : [originPattern];
+  if (!(await chrome.permissions.contains({ origins: neededOrigins }))) {
     await setPendingConnect(audience, settings.serverUrl);
     setStatus(statusEl, "Grant the permission prompt - StudyLife's login window then opens automatically.", "success");
-    const granted = await requestHostPermission(originPattern);
+    const granted = await requestHostPermission(neededOrigins);
     if (!granted) {
       await clearPendingConnect(audience);
       connectButton.disabled = false;

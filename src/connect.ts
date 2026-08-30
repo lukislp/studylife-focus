@@ -104,15 +104,24 @@ export function describeConnectResult(result: ConnectResult): string {
 }
 
 // Called from options.ts inside the Connect button's own user gesture (permissions.request throws
-// outside one) - requests access to exactly the one server ORIGIN being connected to (base URL
-// only, "/*" covers every path/subpage under it), no broader host_permissions declared upfront
-// (see manifest.json). Persists once granted, so this is a no-op on every later call unless the
-// user points the extension at a different origin - including the SECOND feature's connect, since
-// both features share the same server origin.
-export async function requestHostPermission(origin: string): Promise<boolean> {
-  if (await chrome.permissions.contains({ origins: [origin] })) return true;
-  return chrome.permissions.request({ origins: [origin] });
+// outside one) - requests access to exactly the given origin(s), no broader host_permissions
+// declared upfront (see manifest.json). Persists once granted, so this is a no-op on every later
+// call unless something in the requested set isn't already held - including the SECOND feature's
+// connect, since both features share the same server origin.
+export async function requestHostPermission(origins: readonly string[]): Promise<boolean> {
+  if (await chrome.permissions.contains({ origins: [...origins] })) return true;
+  return chrome.permissions.request({ origins: [...origins] });
 }
+
+// Guard's site-blocking rules (rules.ts) redirect main_frame navigations via
+// chrome.declarativeNetRequest - which silently no-ops a redirect for any URL the extension
+// doesn't hold host permission for, confirmed live: getDynamicRules() echoed a registered rule
+// back perfectly, yet a brand-new tab to an unrelated site loaded normally anyway, with zero error
+// anywhere. The default (and recommended, see README) allowlist mode blocks every domain NOT on
+// the user's list, which means it fundamentally needs to see every possible domain - there's no
+// way to scope this down to "just the domains the user typed in" while that mode exists, so this
+// is requested as a single broad grant once, at Guard connect time, rather than per-domain.
+export const GUARD_BLOCKING_ORIGINS = ["http://*/*", "https://*/*"];
 
 // Page-death handoff for the connect flow: the host-permission prompt steals focus and closes
 // the options page, killing its JS BETWEEN the user's grant and the sendMessage that would start

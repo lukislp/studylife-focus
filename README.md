@@ -8,9 +8,13 @@ A browser extension with two independent, separately-toggleable features tied to
 - **Tune** - switches a Spotify playlist automatically ("focus" while running, "break"/pause once
   it ends).
 
-Originally two separate extensions (`studylife-focusguard` and `studylife-focustunes`), merged
-into one package so both fit under a browser's installed-extension limit - each feature keeps its
-own settings tab, its own on/off switch, and its own narrowly-scoped API key; merging the
+Originally two separate extensions (`studylife-focusguard` and `studylife-focustunes`). Both exist
+purely to automate something about your environment around the exact same signal - whether a
+StudyLife focus session is currently running - so they're merged into one package: one shared
+alarm/polling timer and one shared server-URL setup instead of two separate extensions each
+independently reimplementing the same "is a session running" infrastructure, and one install
+instead of two for a single coherent purpose. Each feature still keeps its own settings tab, its
+own on/off switch, and its own narrowly-scoped, separately-consented API key - merging the
 *packaging* didn't merge the two features' concerns into each other.
 
 ## How it works
