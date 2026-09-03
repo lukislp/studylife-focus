@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/lukislp/studylife-focus/compare/v1.2.1...v1.2.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* **ci:** add Dependabot for github-actions, npm ([c6cff67](https://github.com/lukislp/studylife-focus/commit/c6cff675bee9e8a2724c382bac76aa6fded10290))
+
 ## [1.2.1](https://github.com/lukislp/studylife-focus/compare/v1.2.0...v1.2.1) (2026-08-30)
 
 
