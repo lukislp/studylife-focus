@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/lukislp/studylife-focus/compare/v1.2.2...v1.2.3) (2026-09-04)
+
+
+### Bug Fixes
+
+* **deps:** bump the dev group with 2 updates ([734d04a](https://github.com/lukislp/studylife-focus/commit/734d04a4718a0084d3d83e6a326fcb7c17d40ecd))
+
 ## [1.2.2](https://github.com/lukislp/studylife-focus/compare/v1.2.1...v1.2.2) (2026-09-03)
 
 
