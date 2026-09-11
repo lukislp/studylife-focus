@@ -1,3 +1,10 @@
+## [1.2.4](https://github.com/lukislp/studylife-focus/compare/v1.2.3...v1.2.4) (2026-09-11)
+
+
+### Bug Fixes
+
+* **ci:** push release commits as a deploy key so the default branch can be ruleset-protected ([aebb5d6](https://github.com/lukislp/studylife-focus/commit/aebb5d6d4bb39bb75e402ae6954a317eef7852a3))
+
 ## [1.2.3](https://github.com/lukislp/studylife-focus/compare/v1.2.2...v1.2.3) (2026-09-04)
 
 
