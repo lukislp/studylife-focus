@@ -8,19 +8,17 @@
 const AUTHORIZE_URL = "https://accounts.spotify.com/authorize";
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SCOPES = "user-modify-playback-state user-read-playback-state";
-const CODE_VERIFIER_LENGTH = 64; // within RFC 7636's required 43-128 range
-
-const VERIFIER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+// 48 random bytes base64url-encode to exactly 64 characters - within RFC 7636's required
+// 43-128 range, and the base64url alphabet is a subset of the RFC's unreserved set.
+const CODE_VERIFIER_BYTES = 48;
 
 /** A fresh random PKCE code_verifier (RFC 7636 §4.1) - one per authorization attempt, never
- * reused. Uses the Web Crypto RNG available in both the service worker and (via jsdom) tests. */
+ * reused. Uses the Web Crypto RNG available in both the service worker and (via jsdom) tests.
+ * Encodes the raw bytes rather than mapping them onto an alphabet with a remainder: 256 is not
+ * a multiple of a 66-character set, so `byte % 66` would make the first characters of that set
+ * measurably more likely and cost the verifier entropy. */
 export function generateCodeVerifier(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(CODE_VERIFIER_LENGTH));
-  let result = "";
-  for (const byte of bytes) {
-    result += VERIFIER_CHARS[byte % VERIFIER_CHARS.length];
-  }
-  return result;
+  return base64UrlEncode(crypto.getRandomValues(new Uint8Array(CODE_VERIFIER_BYTES)));
 }
 
 /** RFC 7636 §4.2 S256 transform: BASE64URL-ENCODE(SHA256(ASCII(code_verifier))), no padding.
