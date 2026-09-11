@@ -1,5 +1,7 @@
 # StudyLife Focus
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/lukislp/studylife-focus/badge)](https://scorecard.dev/viewer/?uri=github.com/lukislp/studylife-focus) [![CodeQL](https://github.com/lukislp/studylife-focus/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/lukislp/studylife-focus/security/code-scanning)
+
 A browser extension with two independent, separately-toggleable features tied to your
 [StudyLife](https://github.com/lukislp/studylife) focus-timer session:
 
