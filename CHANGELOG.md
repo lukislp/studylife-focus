@@ -1,3 +1,10 @@
+## [1.2.5](https://github.com/lukislp/studylife-focus/compare/v1.2.4...v1.2.5) (2026-09-11)
+
+
+### Bug Fixes
+
+* **spotify:** generate the PKCE verifier without modulo bias ([#14](https://github.com/lukislp/studylife-focus/issues/14)) ([8ba60e4](https://github.com/lukislp/studylife-focus/commit/8ba60e4012ec3b959dac5665042dd5fc0f2bf8a5))
+
 ## [1.2.4](https://github.com/lukislp/studylife-focus/compare/v1.2.3...v1.2.4) (2026-09-11)
 
 
