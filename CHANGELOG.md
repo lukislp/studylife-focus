@@ -1,3 +1,10 @@
+## [1.2.6](https://github.com/lukislp/studylife-focus/compare/v1.2.5...v1.2.6) (2026-09-11)
+
+
+### Bug Fixes
+
+* **ci:** read-only GITHUB_TOKEN in the Dependabot auto-merge workflow ([c45c48c](https://github.com/lukislp/studylife-focus/commit/c45c48c22800e4fb704f9a85b961d1469ce116aa))
+
 ## [1.2.5](https://github.com/lukislp/studylife-focus/compare/v1.2.4...v1.2.5) (2026-09-11)
 
 
