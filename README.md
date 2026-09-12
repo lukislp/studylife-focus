@@ -1,6 +1,10 @@
 # StudyLife Focus
 
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/lukislp/studylife-focus/badge)](https://scorecard.dev/viewer/?uri=github.com/lukislp/studylife-focus) [![CodeQL](https://github.com/lukislp/studylife-focus/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/lukislp/studylife-focus/security/code-scanning)
+[![CI](https://github.com/lukislp/studylife-focus/actions/workflows/ci.yml/badge.svg)](https://github.com/lukislp/studylife-focus/actions/workflows/ci.yml) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/lukislp/studylife-focus/badge)](https://scorecard.dev/viewer/?uri=github.com/lukislp/studylife-focus) [![CodeQL](https://github.com/lukislp/studylife-focus/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/lukislp/studylife-focus/security/code-scanning)
+[![Release](https://img.shields.io/github/v/release/lukislp/studylife-focus)](https://github.com/lukislp/studylife-focus/releases)
+[![License: AGPL-3.0](https://img.shields.io/github/license/lukislp/studylife-focus)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4)](https://developer.chrome.com/docs/extensions/mv3/intro/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6)](https://www.typescriptlang.org/)
 
 A browser extension with two independent, separately-toggleable features tied to your
 [StudyLife](https://github.com/lukislp/studylife) focus-timer session:
