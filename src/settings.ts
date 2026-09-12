@@ -54,7 +54,10 @@ export async function loadTuneSettings(): Promise<FeatureSettings | null> {
 // real endpoint regardless of what the user typed (with or without a trailing slash, with or
 // without "https://", with a stray "/setup" copied along with the URL from their browser bar).
 export function normalizeServerUrl(raw: string): string {
-  const trimmed = raw.trim().replace(/\/+$/, "");
+  // Trailing whitespace and slashes in any mix ("host/ /"): stripping only slashes left a
+  // trailing space behind, so normalizing twice gave two different results (found by the
+  // property test).
+  const trimmed = raw.trim().replace(/[\s/]+$/, "");
   try {
     return new URL(trimmed).origin;
   } catch {

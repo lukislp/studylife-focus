@@ -7,7 +7,9 @@ import fc from "fast-check";
 import { normalizeDomain } from "../src/rules";
 import { normalizeServerUrl } from "../src/settings";
 
-const hostname = fc.stringMatching(/^[a-z][a-z0-9-]{0,20}(\.[a-z][a-z0-9-]{0,10}){1,3}$/);
+// Plain letter/digit labels only: a label like "xn--" is an (invalid) punycode form and a
+// trailing hyphen is not a valid hostname either - both would be generator bugs, not parser bugs.
+const hostname = fc.stringMatching(/^[a-z][a-z0-9]{0,20}(\.[a-z][a-z0-9]{0,10}){1,3}$/);
 
 describe("normalizeDomain (property-based)", () => {
   it("never throws and always returns a string", () => {
