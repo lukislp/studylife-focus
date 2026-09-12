@@ -1,3 +1,10 @@
+## [1.2.8](https://github.com/lukislp/studylife-focus/compare/v1.2.7...v1.2.8) (2026-09-12)
+
+
+### Bug Fixes
+
+* **release:** sign the release assets and attach build provenance ([#21](https://github.com/lukislp/studylife-focus/issues/21)) ([98a5403](https://github.com/lukislp/studylife-focus/commit/98a5403c71c6b125f0bccaf55c138ff98d815ae7))
+
 ## [1.2.7](https://github.com/lukislp/studylife-focus/compare/v1.2.6...v1.2.7) (2026-09-12)
 
 
