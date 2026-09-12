@@ -28,6 +28,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      # Self-heal a stale/corrupted actions/setup-node npm cache without paying the cost of a
+      # clean cache on every normal run - only retries with a forced clean if the first
+      # `npm ci` actually fails.
       - run: npm ci || (npm cache clean --force && npm ci)
       - run: npm run typecheck
       # Catches TimerStateDtoPayload (src/api.ts) drifting from the main repo's committed OpenAPI
@@ -68,6 +71,16 @@ jobs:
       next_version: ${{ steps.semrel.outputs.new_release_version }}
       published: ${{ steps.semrel.outputs.new_release_published }}
     steps:
+      # ref: main (branch tip), not the default github.sha (the push event's SHA) - a "[skip ci]"
+      # commit (e.g. a version-bump commit from a previous release, or another push) can land on
+      # main between this workflow's trigger and this job actually starting. If this checked out
+      # github.sha instead, semantic-release's "local branch is behind the remote" guard would
+      # then analyze that now-stale SHA and silently skip the release entirely - no error, just
+      # nothing published (seen live in sibling studylife-* repos). ref: main always resolves to
+      # whatever main points to right now, so this also covers the older "Re-run jobs" staleness
+      # gap (two PRs merged minutes apart left get-version stuck on the first push's SHA on
+      # re-run) that used to need a manual `git fetch && git checkout -B main origin/main` step
+      # after checkout - no longer needed once checkout itself targets the branch tip.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
