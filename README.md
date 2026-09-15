@@ -23,6 +23,58 @@ instead of two for a single coherent purpose. Each feature still keeps its own s
 own on/off switch, and its own narrowly-scoped, separately-consented API key - merging the
 *packaging* didn't merge the two features' concerns into each other.
 
+## Install
+
+There is no Chrome Web Store listing, so both routes below install the extension **unpacked** -
+either from the packaged release archive, or from your own build. It is a Manifest V3 extension
+built for Chrome 120 or newer (`target: chrome120` in `build.mjs`); other Chromium-based
+browsers use the same packaging, only their extensions page lives at a different URL.
+
+### From a release
+
+1. Download `studylife-focus-v<version>.zip` from the
+   [latest release](https://github.com/lukislp/studylife-focus/releases/latest).
+2. Unzip it into a folder you intend to keep. `manifest.json` sits at the top level of the
+   archive, so the unzipped folder *is* the extension folder - don't wrap it in another one.
+3. Open `chrome://extensions` and turn **Developer mode** on (top right).
+4. Click **Load unpacked** and select that folder.
+5. Open the extension's options page - the **Manage** button in its toolbar popup, or
+   **Details -> Extension options** on its card - and continue with "How it works" below.
+
+Leave the folder where it is. Chrome derives an unpacked extension's ID from its path, and the
+Spotify redirect URI shown on the Tune tab is derived in turn from that ID
+(`chrome.identity.getRedirectURL()`) - moving the folder later means registering the new
+redirect URI with your Spotify app again.
+
+Every release also carries a keyless [Sigstore](https://www.sigstore.dev/) signature bundle
+(`studylife-focus-v<version>.zip.sigstore.json`) and a GitHub build-provenance attestation
+(`provenance.intoto.jsonl`) next to the archive, both produced by this repo's own CI run. To
+check the download is the artifact that pipeline built, before unpacking it:
+
+```bash
+cosign verify-blob --bundle studylife-focus-v<version>.zip.sigstore.json \
+  --certificate-identity-regexp '^https://github.com/lukislp/studylife-focus/\.github/workflows/ci\.yml@refs/heads/main$' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  studylife-focus-v<version>.zip
+```
+
+### From source
+
+```bash
+npm ci
+npm run build      # -> dist/
+```
+
+Then load `dist/` exactly as in steps 3-5 above. `npm run package` additionally zips `dist/` into
+`release/studylife-focus-v<version>.zip` - the same archive the releases carry.
+
+### Updating
+
+An unpacked extension doesn't auto-update. To move to a newer version, download (or rebuild) it
+over the same folder and press the reload icon on its card in `chrome://extensions`. Your server
+URL, connections and block list live in `chrome.storage` and survive that, as long as the folder
+path - and with it the extension ID - stays the same.
+
 ## How it works
 
 1. **General tab**: point the extension at your self-hosted StudyLife server (base URL only, e.g.
