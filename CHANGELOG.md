@@ -1,3 +1,10 @@
+## [1.2.10](https://github.com/lukislp/studylife-focus/compare/v1.2.9...v1.2.10) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** correct missing Harden Runner allowlist ports (github.com:22, crl:80) ([#44](https://github.com/lukislp/studylife-focus/issues/44)) ([4572567](https://github.com/lukislp/studylife-focus/commit/45725677a0a5fdbcf5e572eb0e0aa1223ed823e3))
+
 ## [1.2.9](https://github.com/lukislp/studylife-focus/compare/v1.2.8...v1.2.9) (2026-09-20)
 
 
