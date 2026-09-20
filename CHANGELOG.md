@@ -1,3 +1,10 @@
+## [1.2.9](https://github.com/lukislp/studylife-focus/compare/v1.2.8...v1.2.9) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** add Harden Runner in audit mode to every job ([#42](https://github.com/lukislp/studylife-focus/issues/42)) ([32a17be](https://github.com/lukislp/studylife-focus/commit/32a17beb05170038d24d40a436d9164d330613f2))
+
 ## [1.2.8](https://github.com/lukislp/studylife-focus/compare/v1.2.7...v1.2.8) (2026-09-12)
 
 
