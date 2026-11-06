@@ -1,5 +1,5 @@
 // Keeps manifest.json's own "version" field (the one Chrome/the Web Store actually reads) in
-// sync with the version semantic-release computes and writes into package.json. Mirrors
+// sync with the version the release workflow publishes (and writes into package.json). Mirrors
 // studylife-capture's scripts/sync-manifest-version.mjs.
 import { readFileSync, writeFileSync } from "node:fs";
 
