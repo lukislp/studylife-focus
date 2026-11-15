@@ -110,7 +110,7 @@ describe("isDomainAllowed", () => {
       expect(isDomainAllowed("en.wikipedia.org", config)).toBe(true);
     });
 
-    it("allows the always-allowed (StudyLife) domain", () => {
+    it("allows the always-allowed (StudyAtrium) domain", () => {
       expect(isDomainAllowed("studylife.example.com", config)).toBe(true);
     });
 

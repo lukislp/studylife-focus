@@ -1,4 +1,6 @@
-# StudyLife Focus
+# StudyAtrium Focus
+
+(formerly StudyLife)
 
 [![CI](https://github.com/lukislp/studylife-focus/actions/workflows/ci.yml/badge.svg)](https://github.com/lukislp/studylife-focus/actions/workflows/ci.yml) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/lukislp/studylife-focus/badge)](https://scorecard.dev/viewer/?uri=github.com/lukislp/studylife-focus) [![CodeQL](https://github.com/lukislp/studylife-focus/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/lukislp/studylife-focus/security/code-scanning)
 [![Release](https://img.shields.io/github/v/release/lukislp/studylife-focus)](https://github.com/lukislp/studylife-focus/releases)
@@ -7,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6)](https://www.typescriptlang.org/)
 
 A browser extension with two independent, separately-toggleable features tied to your
-[StudyLife](https://github.com/lukislp/studylife) focus-timer session:
+[StudyAtrium](https://github.com/lukislp/studylife) focus-timer session:
 
 - **Guard** - blocks or allows sites while a session is running, so opening a distracting site
   during deep-work time takes a deliberate detour instead of one click.
@@ -16,7 +18,7 @@ A browser extension with two independent, separately-toggleable features tied to
 
 Originally two separate extensions (`studylife-focusguard` and `studylife-focustunes`). Both exist
 purely to automate something about your environment around the exact same signal - whether a
-StudyLife focus session is currently running - so they're merged into one package: one shared
+StudyAtrium focus session is currently running - so they're merged into one package: one shared
 alarm/polling timer and one shared server-URL setup instead of two separate extensions each
 independently reimplementing the same "is a session running" infrastructure, and one install
 instead of two for a single coherent purpose. Each feature still keeps its own settings tab, its
@@ -77,7 +79,7 @@ path - and with it the extension ID - stays the same.
 
 ## How it works
 
-1. **General tab**: point the extension at your self-hosted StudyLife server (base URL only, e.g.
+1. **General tab**: point the extension at your self-hosted StudyAtrium server (base URL only, e.g.
    `https://studylife.example.com` - no path needed, every subpage/API route under it is covered)
    and save it. This is shared by both features - connect either or both from their own tabs next.
 2. **Guard tab**: connect (the same passkey-backed consent flow studylife-capture and
@@ -90,7 +92,7 @@ path - and with it the extension ID - stays the same.
    paste the client ID in, set a focus playlist (and optionally a break playlist - otherwise
    playback just pauses), and connect Spotify itself.
 4. Either feature reacts within a second or two if you started/paused/reset the timer from the
-   same browser this extension runs in (StudyLife's own page dispatches an event a content script
+   same browser this extension runs in (StudyAtrium's own page dispatches an event a content script
    picks up and relays - see "Known limitations" for the confirmed race this mitigates but doesn't
    fully eliminate), and falls back to polling `GET /api/timerstate` (roughly every 30 seconds)
    for a session started elsewhere (another device, the phone app, etc.).
@@ -113,14 +115,14 @@ itself and targets one directly.
 - `tabs` - Guard reads the URLs of your currently open tabs, purely to redirect already-open
   matches the moment a focus session starts. Tab URLs are compared against your block list
   locally and never leave the browser - see [PRIVACY.md](PRIVACY.md).
-- `identity` - three independent OAuth-style flows: StudyLife's browser-consent connect (once per
+- `identity` - three independent OAuth-style flows: StudyAtrium's browser-consent connect (once per
   feature you connect), and Spotify's own PKCE authorization flow for Tune.
 - `notifications` - a confirmation when connecting either feature succeeds or fails.
 - `scripting` - dynamically registers a tiny content script against exactly the one server origin
-  you connect to, so it can hear StudyLife's own page dispatch a "timer state changed" browser
+  you connect to, so it can hear StudyAtrium's own page dispatch a "timer state changed" browser
   event and relay a "check now" nudge to the extension - it doesn't read or modify page content,
   and the poll fallback still covers everything if this never fires.
-- `optional_host_permissions` (`http://*/*`, `https://*/*`) - requested only at StudyLife connect
+- `optional_host_permissions` (`http://*/*`, `https://*/*`) - requested only at StudyAtrium connect
   time, scoped to exactly the one server origin you enter.
 - `optional_host_permissions` for `accounts.spotify.com`/`api.spotify.com` - requested only when
   you connect Tune's Spotify integration, so a Guard-only install never prompts for Spotify access
@@ -139,7 +141,7 @@ itself and targets one directly.
   worker's own logs: a hint-triggered poll landing ~40ms after the click read the OLD server state,
   because the save simply hadn't landed yet, and only the next alarm tick caught the real change.
   Mitigated (not eliminated - a sufficiently slow save could still outlast it) by retrying the poll
-  twice more, 1s and 2.5s after the first one. Open `chrome://extensions` -> StudyLife Focus ->
+  twice more, 1s and 2.5s after the first one. Open `chrome://extensions` -> StudyAtrium Focus ->
   "service worker" -> Console to watch this live: a `received timer-state hint from page` line
   right after your click confirms the instant path fired, and any `hint retry poll` lines after it
   show the race being caught.
@@ -151,18 +153,18 @@ itself and targets one directly.
   blocked site *while* a session was already running isn't tracked the same way, so it stays on
   the blocked page until you navigate it yourself.
 - **No in-extension way to end a session early.** Both API keys are deliberately read-only (see
-  below) - if you need to stop, end the session in StudyLife itself.
+  below) - if you need to stop, end the session in StudyAtrium itself.
 
 ## Why the API keys are this narrow
 
-Guard's and Tune's StudyLife keys can each reach exactly one endpoint: `GET /api/timerstate`
+Guard's and Tune's StudyAtrium keys can each reach exactly one endpoint: `GET /api/timerstate`
 (plus `whoami` for diagnostics) - two separate, separately-consented server-side identities
 (neither can read the other's connection state), matching `ApiKeyScopes.FocusGuard` /
 `ApiKeyScopes.FocusTunes` in the `studylife` repo. Neither can read your notes, sessions, courses,
 or settings, and neither can write anything at all - not even the timer state either one polls.
 Tune's actual music control happens entirely against Spotify's own API, using a completely
-separate token obtained directly from Spotify - StudyLife never sees it, and Spotify never sees
-your StudyLife credentials.
+separate token obtained directly from Spotify - StudyAtrium never sees it, and Spotify never sees
+your StudyAtrium credentials.
 
 ## Development
 
