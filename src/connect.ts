@@ -73,6 +73,23 @@ export function parseAuthRedirect(
   return { ok: true, assertion };
 }
 
+// Consent page URL for one connect attempt. code_challenge/code_challenge_method carry the PKCE
+// (RFC 7636, S256) challenge; the matching verifier is sent only in the later assertion exchange.
+export function buildConsentUrl(
+  audience: ConnectAudience,
+  serverUrl: string,
+  redirectUri: string,
+  state: string,
+  codeChallenge: string,
+): string {
+  const url = new URL(`/connect/${audience}`, serverUrl);
+  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("state", state);
+  url.searchParams.set("code_challenge", codeChallenge);
+  url.searchParams.set("code_challenge_method", "S256");
+  return url.toString();
+}
+
 // Single source of truth for the connect flow's user-facing text, so background.ts's notification
 // (the reliable channel, since the options page is expected to close mid-flow - see above) and
 // options.ts's inline status (a best-effort extra, shown only if the page happens to survive)
