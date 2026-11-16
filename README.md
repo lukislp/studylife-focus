@@ -75,7 +75,14 @@ Then load `dist/` exactly as in steps 3-5 above. `npm run package` additionally 
 An unpacked extension doesn't auto-update. To move to a newer version, download (or rebuild) it
 over the same folder and press the reload icon on its card in `chrome://extensions`. Your server
 URL, connections and block list live in `chrome.storage` and survive that, as long as the folder
-path - and with it the extension ID - stays the same.
+path stays the same.
+
+**Upgrading from a version before the stable extension ID (v1.2.10 and earlier):** those builds
+had no `"key"` in their manifest, so Chrome derived the ID from the install path. This version
+pins a fixed ID (see "Stable extension ID" below), which means Chrome treats it as a *new*
+extension: settings and connections stored under the old ID are not carried over, and you need to
+set the server URL again and reconnect Guard and Tune once. Recommended: load the new version
+(`Load unpacked`), reconnect, then remove the old entry.
 
 ## How it works
 
@@ -165,6 +172,25 @@ or settings, and neither can write anything at all - not even the timer state ei
 Tune's actual music control happens entirely against Spotify's own API, using a completely
 separate token obtained directly from Spotify - StudyAtrium never sees it, and Spotify never sees
 your StudyAtrium credentials.
+
+## Stable extension ID
+
+`manifest.json` embeds a fixed public key in its `"key"` field, so Chrome derives the **same
+extension ID** on every machine and every unpacked load. Only the public half exists in this
+repository (the private key was discarded, it is not needed for unpacked installs).
+
+```
+Extension ID:  hhgnenpnafffiadgabcclncnbfdopnlp
+Redirect URI:  https://hhgnenpnafffiadgabcclncnbfdopnlp.chromiumapp.org/
+```
+
+`chrome.identity.launchWebAuthFlow()` returns the consent result to that redirect URI, and the
+StudyAtrium server only accepts redirects to known extension IDs. If you fork this repository with
+your own key, your ID and redirect URI differ and must be allowed on your server.
+
+The Guard and Tune connect flows use PKCE (S256): each connect attempt creates a fresh code
+verifier in the service worker, the consent URL carries only its challenge, and the verifier is
+sent once in the assertion exchange and then discarded.
 
 ## Development
 

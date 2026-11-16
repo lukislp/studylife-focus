@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "StudyAtrium Focus",
   "version": "1.2.10",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxp6qnnQ4DRjaukqy/Mhn+qHlJiSIyxGSbvVTRMuC4BHNW1Q74aHtXl/bPz9vnbYH3zJYsUD4P//Z2kcvCL0Z2EAvZEt1sILl411wjRrjAzQhn0jOf9I7pu40JEZjG1zthiR6Jp47ugluFsgYTc/dOunzFmp94pEqm2ue3a+JdaQW/irZRpDLHoGc7RvltsSCdkfG0wB/GhcPiWqat44/02lrZOCXJUS5jwLLR2F61BgYBaYn1/UVqOFlCvlV3P44TfbiwHqE9goavrWGfuw47W4U6A9LBf274F5VCdHn9zB9DNiWVA16VyUOGS+UFgZL7EqwZ3SRpSeJOSZ8/yCjOwIDAQAB",
   "description": "Blocks distracting sites and switches Spotify playlists based on your StudyAtrium focus session.",
   "permissions": [
     "storage",
