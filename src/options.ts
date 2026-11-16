@@ -84,7 +84,7 @@ async function connectFeature(
 ): Promise<void> {
   const settings = await loadStoredSettings();
   if (!settings?.serverUrl) {
-    setStatus(statusEl, "Save your StudyLife server URL in the General tab first.", "error");
+    setStatus(statusEl, "Save your StudyAtrium server URL in the General tab first.", "error");
     return;
   }
 
@@ -107,7 +107,7 @@ async function connectFeature(
   const neededOrigins = audience === "focusguard" ? [originPattern, ...GUARD_BLOCKING_ORIGINS] : [originPattern];
   if (!(await chrome.permissions.contains({ origins: neededOrigins }))) {
     await setPendingConnect(audience, settings.serverUrl);
-    setStatus(statusEl, "Grant the permission prompt - StudyLife's login window then opens automatically.", "success");
+    setStatus(statusEl, "Grant the permission prompt - StudyAtrium's login window then opens automatically.", "success");
     const granted = await requestHostPermission(neededOrigins);
     if (!granted) {
       await clearPendingConnect(audience);
@@ -117,7 +117,7 @@ async function connectFeature(
     return;
   }
 
-  setStatus(statusEl, "Opening StudyLife's login page…", "success");
+  setStatus(statusEl, "Opening StudyAtrium's login page…", "success");
 
   chrome.runtime
     .sendMessage({ type: connectMessageType(audience), audience, serverUrl: settings.serverUrl })
@@ -190,7 +190,7 @@ function renderListSection(): void {
 
   listHeading.textContent = isWhitelist ? "Allowed sites" : "Blocked sites";
   listDesc.innerHTML = isWhitelist
-    ? "Just the domain, e.g. <code>wikipedia.org</code> - subdomains are covered automatically, no need to list each one. StudyLife itself is always reachable, no matter what's on this list."
+    ? "Just the domain, e.g. <code>wikipedia.org</code> - subdomains are covered automatically, no need to list each one. StudyAtrium itself is always reachable, no matter what's on this list."
     : "Just the domain, e.g. <code>reddit.com</code> - subdomains are covered automatically, no need to list each one.";
 
   const list = isWhitelist ? blockConfig.whitelist : blockConfig.blacklist;

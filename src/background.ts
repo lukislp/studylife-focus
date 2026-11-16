@@ -463,9 +463,9 @@ function describeExchangeFailure(exchange: ExchangeFailure): ConnectResult {
 function finishConnect(audience: ConnectAudience, result: ConnectResult): ConnectResult {
   const featureName = audience === "focusguard" ? "Guard" : "Tune";
   if (result.ok) {
-    notify(`Connected StudyLife ${featureName}`, result.serverUrl);
+    notify(`Connected StudyAtrium ${featureName}`, result.serverUrl);
   } else {
-    notify(`StudyLife ${featureName} connect failed`, describeConnectResult(result));
+    notify(`StudyAtrium ${featureName} connect failed`, describeConnectResult(result));
   }
   return result;
 }

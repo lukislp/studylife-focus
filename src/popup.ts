@@ -14,7 +14,7 @@ async function render(): Promise<void> {
   const [settings, toggles] = await Promise.all([loadStoredSettings(), loadFeatureToggles()]);
 
   connectionStatus.textContent = settings?.serverUrl
-    ? `StudyLife server: ${settings.serverUrl}`
+    ? `StudyAtrium server: ${settings.serverUrl}`
     : "Not set up yet - click Manage to get started.";
 
   await renderGuardStatus(settings?.guardApiKey ?? "", toggles.guardEnabled);
