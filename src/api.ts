@@ -80,8 +80,9 @@ export type ExchangeResult<TKeyField extends string> =
 export async function exchangeFocusGuardAssertion(
   serverUrl: string,
   assertion: string,
+  codeVerifier: string,
 ): Promise<ExchangeResult<"focusGuardApiKey">> {
-  return exchangeAssertion(serverUrl, assertion, "focusguard", "focusGuardApiKey");
+  return exchangeAssertion(serverUrl, assertion, codeVerifier, "focusguard", "focusGuardApiKey");
 }
 
 // Same as above, audience "focustunes" - server-side counterpart is
@@ -90,13 +91,15 @@ export async function exchangeFocusGuardAssertion(
 export async function exchangeFocusTunesAssertion(
   serverUrl: string,
   assertion: string,
+  codeVerifier: string,
 ): Promise<ExchangeResult<"focusTunesApiKey">> {
-  return exchangeAssertion(serverUrl, assertion, "focustunes", "focusTunesApiKey");
+  return exchangeAssertion(serverUrl, assertion, codeVerifier, "focustunes", "focusTunesApiKey");
 }
 
 async function exchangeAssertion<TKeyField extends string>(
   serverUrl: string,
   assertion: string,
+  codeVerifier: string,
   audiencePath: "focusguard" | "focustunes",
   keyField: TKeyField,
 ): Promise<ExchangeResult<TKeyField>> {
@@ -108,7 +111,7 @@ async function exchangeAssertion<TKeyField extends string>(
     const response = await fetchWithTimeout(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assertion }),
+      body: JSON.stringify({ assertion, codeVerifier }),
     });
     if (response.status === 404) {
       return { ok: false, kind: "not-found" };

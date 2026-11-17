@@ -1,6 +1,8 @@
+import { newPkcePair } from "./pkce";
 import { exchangeFocusGuardAssertion, exchangeFocusTunesAssertion, pollTimerState, type ExchangeFailure } from "./api";
 import { loadBlockConfig } from "./blockConfig";
 import {
+  buildConsentUrl,
   describeConnectResult,
   isConnectMessage,
   parseAuthRedirect,
@@ -396,13 +398,13 @@ async function handleConnectRequest(audience: ConnectAudience, rawServerUrl: str
   }
 
   const state = crypto.randomUUID();
-  const authUrl = new URL(`/connect/${audience}`, serverUrl);
-  authUrl.searchParams.set("redirect_uri", chrome.identity.getRedirectURL());
-  authUrl.searchParams.set("state", state);
+  // PKCE: the verifier stays in this chain's memory (like `state`) and goes only into the exchange.
+  const pkce = await newPkcePair();
+  const authUrl = buildConsentUrl(audience, serverUrl, chrome.identity.getRedirectURL(), state, pkce.challenge);
 
   let responseUrl: string | undefined;
   try {
-    responseUrl = await chrome.identity.launchWebAuthFlow({ url: authUrl.toString(), interactive: true });
+    responseUrl = await chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/did not approve|cancel/i.test(message)) {
@@ -422,7 +424,7 @@ async function handleConnectRequest(audience: ConnectAudience, rawServerUrl: str
   const existing = await loadStoredSettings();
   const toggles = await loadFeatureToggles();
   if (audience === "focusguard") {
-    const exchange = await exchangeFocusGuardAssertion(serverUrl, redirectResult.assertion);
+    const exchange = await exchangeFocusGuardAssertion(serverUrl, redirectResult.assertion, pkce.verifier);
     if (!exchange.ok) return finishConnect(audience, describeExchangeFailure(exchange));
     await saveSettings({
       serverUrl,
@@ -434,7 +436,7 @@ async function handleConnectRequest(audience: ConnectAudience, rawServerUrl: str
     // hasn't switched Guard off, in which case connecting must not start blocking behind their back.
     if (toggles.guardEnabled) await pollAndApplyGuard();
   } else {
-    const exchange = await exchangeFocusTunesAssertion(serverUrl, redirectResult.assertion);
+    const exchange = await exchangeFocusTunesAssertion(serverUrl, redirectResult.assertion, pkce.verifier);
     if (!exchange.ok) return finishConnect(audience, describeExchangeFailure(exchange));
     await saveSettings({
       serverUrl,
