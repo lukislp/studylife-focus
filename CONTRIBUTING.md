@@ -29,7 +29,7 @@ deliberately small - but it is the same for every change, including the maintain
   `TimerStateDtoPayload` (`src/api.ts`) against the main `studylife` repo's committed OpenAPI spec.
   If the server contract moved, update the mirror in the same PR - the check is part of `lint` and
   blocks the merge otherwise.
-- **Dependencies.** `npm audit --audit-level=high` runs in `lint` and must stay clean.
+- **Dependencies.** `node scripts/audit-allowlist.mjs` (high/critical `npm audit`) runs in `lint` and must stay clean. It allowlists only GHSA-fc5q-39xc-vjpf (picomatch, no upstream fix yet); remove the allowlist once picomatch publishes a patched release (micromatch/picomatch#194).
 - **Permissions.** Adding a `manifest.json` permission is a review topic of its own; say in the PR
   why it is needed, since it affects the browser store listing and `PRIVACY.md`.
 
