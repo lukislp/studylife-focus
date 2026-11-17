@@ -27,8 +27,9 @@ own on/off switch, and its own narrowly-scoped, separately-consented API key - m
 
 ## Install
 
-There is no Chrome Web Store listing, so both routes below install the extension **unpacked** -
-either from the packaged release archive, or from your own build. It is a Manifest V3 extension
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/studylife-focus/bhjoeghhdmaoepmbklbcbdkfnjbgclbh)**
+- the easiest way, gets automatic updates. The two routes below install the extension
+**unpacked** instead - either from the packaged release archive, or from your own build. It is a Manifest V3 extension
 built for Chrome 120 or newer (`target: chrome120` in `build.mjs`); other Chromium-based
 browsers use the same packaging, only their extensions page lives at a different URL.
 
@@ -68,7 +69,8 @@ npm run build      # -> dist/
 ```
 
 Then load `dist/` exactly as in steps 3-5 above. `npm run package` additionally zips `dist/` into
-`release/studylife-focus-v<version>.zip` - the same archive the releases carry.
+`release/studylife-focus-v<version>.zip` - the same archive the releases carry - and into the
+Chrome Web Store package (see "Publishing to the Chrome Web Store" below).
 
 ### Updating
 
@@ -141,7 +143,7 @@ itself and targets one directly.
   started from a device/browser this extension isn't installed in) - `chrome.alarms` (the only
   persistent timer primitive available to an MV3 service worker, which can be killed and
   respawned at any time) has a 30-second minimum period for an unpacked extension (1 minute
-  once/if this ever ships via the Web Store).
+  for the Chrome Web Store build).
 - **The instant same-browser path can occasionally lose a race.** The page-side event fires the
   moment the timer's LOCAL state changes, but the `PUT /api/timerstate` that actually persists that
   state to the server is a separate, unordered network request - confirmed live via the service
@@ -180,17 +182,38 @@ extension ID** on every machine and every unpacked load. Only the public half ex
 repository (the private key was discarded, it is not needed for unpacked installs).
 
 ```
-Extension ID:  hhgnenpnafffiadgabcclncnbfdopnlp
-Redirect URI:  https://hhgnenpnafffiadgabcclncnbfdopnlp.chromiumapp.org/
+Unpacked builds:   hhgnenpnafffiadgabcclncnbfdopnlp
+                   https://hhgnenpnafffiadgabcclncnbfdopnlp.chromiumapp.org/
+Chrome Web Store:  bhjoeghhdmaoepmbklbcbdkfnjbgclbh
+                   https://bhjoeghhdmaoepmbklbcbdkfnjbgclbh.chromiumapp.org/
 ```
 
-`chrome.identity.launchWebAuthFlow()` returns the consent result to that redirect URI, and the
-StudyAtrium server only accepts redirects to known extension IDs. If you fork this repository with
-your own key, your ID and redirect URI differ and must be allowed on your server.
+The store install has its own ID because the store signs the package with the listing's key
+(the store package is built without `"key"`, see below). `chrome.identity.launchWebAuthFlow()`
+returns the consent result to the redirect URI of whichever build is installed, and the
+StudyAtrium server accepts both IDs by default and nothing else. If you fork this repository with
+your own key, your ID and redirect URI differ and must be allowed on your server
+(`Consent:ChromeExtensionIds:focusguard` / `:focustunes`).
 
 The Guard and Tune connect flows use PKCE (S256): each connect attempt creates a fresh code
 verifier in the service worker, the consent URL carries only its challenge, and the verifier is
 sent once in the assertion exchange and then discarded.
+
+## Publishing to the Chrome Web Store
+
+`npm run package` (zip.mjs) builds two archives from the same `dist/`:
+
+| Archive | `manifest.json` | Use |
+|---|---|---|
+| `release/studylife-focus-v<version>.zip` | with `"key"` | GitHub release download, Load unpacked |
+| `release/studylife-focus-v<version>-chrome-web-store.zip` | without `"key"` | upload to the Chrome Web Store |
+
+Upload **only the `-chrome-web-store.zip`** in the developer dashboard. The store does not accept
+a manifest `"key"` that is not the listing's own, and it signs the package with the listing's key
+anyway, so the store build keeps the ID `bhjoeghhdmaoepmbklbcbdkfnjbgclbh`. The two archives
+differ in that one manifest field only (`scripts/package-variants.mjs`); `dist/` itself keeps the
+key, so local development and unpacked loads keep the stable unpacked ID. Every release carries
+both archives, each with its own Sigstore bundle and covered by the build-provenance attestation.
 
 ## Development
 
