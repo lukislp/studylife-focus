@@ -12,7 +12,7 @@ export interface BlockConfig {
 const STORAGE_KEY = "blockConfig";
 
 // Whitelist is the recommended default (see README) - a fresh install with an empty whitelist
-// blocks EVERYTHING except the configured StudyLife server the moment a focus session starts,
+// blocks EVERYTHING except the configured StudyAtrium server the moment a focus session starts,
 // which is why options.ts's first-run flow nudges the user to add a few sites before that
 // happens, rather than silently starting from a maximally strict, unexplained state.
 const DEFAULT_CONFIG: BlockConfig = { mode: "whitelist", whitelist: [], blacklist: [] };

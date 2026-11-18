@@ -1,4 +1,4 @@
-// Guards against StudyLife's server-side TimerStateDto drifting out from under this extension's
+// Guards against StudyAtrium's server-side TimerStateDto drifting out from under this extension's
 // hand-mirrored TimerStateDtoPayload (src/api.ts) without anyone noticing until a build reaches
 // users with it already broken - by then a fix is days away, not minutes. Diffs the fields this
 // extension actually reads against the main repo's committed OpenAPI spec (docs/api/openapi.json)

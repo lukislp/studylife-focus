@@ -21,7 +21,7 @@ export interface RuleConfig {
   whitelist: string[];
   blacklist: string[];
   /** Always reachable in whitelist mode regardless of the user's own list - in practice just the
-   * configured StudyLife server's own domain, so a user can never lock themselves out of the app
+   * configured StudyAtrium server's own domain, so a user can never lock themselves out of the app
    * that started the focus session in the first place. */
   alwaysAllowedDomains: string[];
 }

@@ -1,4 +1,4 @@
-/* Matches StudyLife's own design tokens exactly (see studylife/src/StudyLife.Client/wwwroot/css/
+/* Matches StudyAtrium's own design tokens exactly (see studylife/src/StudyLife.Client/wwwroot/css/
    base.css and studylife-capture's popup.css, which established this pattern first) rather than
    inventing a separate look for this satellite extension. Shared by all three of this
    extension's pages (popup, options, blocked) - each links this file, then adds only what it
@@ -7,7 +7,7 @@
 /* DM Sans, self-hosted (SIL Open Font License, see fonts/OFL.txt) instead of Google Fonts'
    @import - loading it from fonts.googleapis.com on every page open would be a third-party
    network request, contradicting this project's own "no third-party requests beyond your own
-   StudyLife server" claim (see PRIVACY.md). Both files are the actual variable font Google
+   StudyAtrium server" claim (see PRIVACY.md). Both files are the actual variable font Google
    serves (weight axis 100-1000), so one @font-face per subset covers every weight used here. */
 @font-face {
   font-family: 'DM Sans';
@@ -58,7 +58,7 @@
 /* !important, not just a plain rule: a component class that sets its OWN `display` (e.g.
    .btn-primary below, when used on an <a>) otherwise silently wins over the browser's default
    `[hidden] { display: none }` UA rule the moment it's applied to the same element - author CSS
-   always beats UA CSS. Hit live on blocked.ts's "Open StudyLife" link, which was visible and
+   always beats UA CSS. Hit live on blocked.ts's "Open StudyAtrium" link, which was visible and
    clickable (with its placeholder href="#") from the very first paint, well before the async
    render() that sets its real href ever ran. This one global rule closes the whole bug category
    rather than patching each component that happens to combine [hidden] with its own display. */
@@ -80,7 +80,7 @@ body {
 a { color: var(--accent); text-decoration: none; }
 a:hover { opacity: 0.8; }
 
-/* === Brand header (StudyLife's own .brand/.brand-icon/.brand-name, wwwroot/css/base.css) === */
+/* === Brand header (StudyAtrium's own .brand/.brand-icon/.brand-name, wwwroot/css/base.css) === */
 .brand {
   display: flex;
   align-items: center;
@@ -98,7 +98,7 @@ a:hover { opacity: 0.8; }
   letter-spacing: -0.01em;
 }
 
-/* === Card (StudyLife's .setup-section) === */
+/* === Card (StudyAtrium's .setup-section) === */
 .card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -106,7 +106,7 @@ a:hover { opacity: 0.8; }
   padding: 1.25rem;
 }
 
-/* Uppercase eyebrow label above a card's content (StudyLife's .ss-label) */
+/* Uppercase eyebrow label above a card's content (StudyAtrium's .ss-label) */
 .card-label {
   font-size: 0.7rem;
   font-weight: 500;
@@ -132,7 +132,7 @@ code {
   color: var(--text2);
 }
 
-/* === Inputs/buttons (StudyLife's .input/.btn-primary/.btn-secondary/.btn-danger,
+/* === Inputs/buttons (StudyAtrium's .input/.btn-primary/.btn-secondary/.btn-danger,
    wwwroot/css/shared.css) === */
 .input {
   background: var(--bg3);
@@ -199,7 +199,7 @@ code {
 .hint { font-size: 0.8rem; color: var(--text3); }
 .hint.success { color: var(--success); }
 
-/* === Toggle switch (StudyLife's .toggle/.toggle-track, wwwroot/css/setup.css) === */
+/* === Toggle switch (StudyAtrium's .toggle/.toggle-track, wwwroot/css/setup.css) === */
 .toggle-row { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.7rem; }
 .toggle-row:last-child { margin-bottom: 0; }
 .toggle { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; cursor: pointer; margin-top: 0.1rem; }
