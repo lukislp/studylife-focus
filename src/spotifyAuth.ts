@@ -1,6 +1,6 @@
 // Spotify's own OAuth 2.1 PKCE flow (accounts.spotify.com) - completely independent of
-// StudyLife's own consent flow (connect.ts): this extension holds two separate identities, one
-// per service, and StudyLife's backend is never involved in obtaining or refreshing the Spotify
+// StudyAtrium's own consent flow (connect.ts): this extension holds two separate identities, one
+// per service, and StudyAtrium's backend is never involved in obtaining or refreshing the Spotify
 // token. PKCE (not the older implicit grant) because Spotify requires it for a public client
 // (a browser extension can't keep a client secret) - see
 // https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow.

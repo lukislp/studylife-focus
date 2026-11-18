@@ -52,7 +52,7 @@ const SWEPT_TABS_KEY = "sweptTabOriginalUrls";
 // a token that expires mid-request.
 const TOKEN_EXPIRY_BUFFER_MS = 60_000;
 
-// Visible in chrome://extensions -> StudyLife Focus -> "service worker" -> Console. Deliberately
+// Visible in chrome://extensions -> StudyAtrium Focus -> "service worker" -> Console. Deliberately
 // kept (not stripped in production builds) - this whole poll/hint pipeline has no other way to be
 // diagnosed live, since none of it has any user-facing surface of its own.
 function log(message: string): void {
@@ -348,7 +348,7 @@ function hostnameOf(url: string): string | null {
   }
 }
 
-// ── Browser-consent connect flow for StudyLife - runs independently once per audience
+// ── Browser-consent connect flow for StudyAtrium - runs independently once per audience
 // (identity contract v1 §2: "focusguard" and "focustunes" are still two separate, separately-
 // consented server-side identities, merging the two EXTENSIONS didn't merge those). Spotify's own
 // OAuth (spotifyAuth.ts) is unrelated and runs entirely within options.ts. ──

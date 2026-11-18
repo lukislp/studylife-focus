@@ -1,5 +1,5 @@
 // Self-hosted, so unlike a typical extension there's no single fixed API host - every user points
-// this at their own StudyLife instance. Only the BASE URL is ever stored/entered - every API call
+// this at their own StudyAtrium instance. Only the BASE URL is ever stored/entered - every API call
 // appends its own path (see api.ts), never the other way around, so the user never has to think
 // about paths at all. Shared across both features (Guard and Tune) since it's one server; the two
 // API keys are separate because Guard and Tune are two independent, separately-consented audiences

@@ -29,7 +29,7 @@ for (const button of tabButtons) {
   });
 }
 
-// ── General tab: shared StudyLife server URL ────────────────────────────────────────────────
+// ── General tab: shared StudyAtrium server URL ────────────────────────────────────────────────
 
 const serverUrlInput = document.getElementById("server-url") as HTMLInputElement;
 const saveServerUrlButton = document.getElementById("save-server-url") as HTMLButtonElement;
@@ -270,7 +270,7 @@ async function initTuneConnection(): Promise<void> {
 tuneConnectButton.addEventListener("click", () =>
   connectFeature("focustunes", tuneConnectButton, tuneConnectStatus, () => void initTuneConnection()));
 
-// No permission-prompt/popup-death dance needed here (unlike the StudyLife flow above): the two
+// No permission-prompt/popup-death dance needed here (unlike the StudyAtrium flow above): the two
 // Spotify hosts are optional_host_permissions requested once, on this same click, so this runs
 // entirely within this page's own click handler.
 

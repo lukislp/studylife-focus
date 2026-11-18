@@ -74,7 +74,7 @@ export type ExchangeResult<TKeyField extends string> =
 
 // Trades the passkey-signed assertion from the browser consent flow (connect.ts /
 // chrome.identity.launchWebAuthFlow) for a FocusGuardApiKey - the server-side counterpart is
-// POST /api/auth/focusguard-assertion-exchange (StudyLife's AuthController). Anonymous POST: the
+// POST /api/auth/focusguard-assertion-exchange (StudyAtrium's AuthController). Anonymous POST: the
 // assertion itself is the credential, there's no X-Api-Key to send yet since that's exactly what
 // this call is meant to produce.
 export async function exchangeFocusGuardAssertion(
