@@ -5,6 +5,29 @@ instance, bundling two independent features (Guard and Tune). There is no vendor
 your data goes at most three places: your own StudyAtrium server, Spotify's own API (Tune only,
 using credentials you obtain directly from Spotify), and your own device's local browser storage.
 
+**Controller:** the operator of your instance. **Publisher:** see the imprint at
+<https://lktec.org/impressum>. Spotify is a separate controller for everything that happens at
+Spotify (see "Spotify" below).
+
+## Access to all websites (Guard)
+
+When you connect Guard, the browser asks for **access to all websites** (`http://*/*` and
+`https://*/*`; Chrome words this as being able to read and change your data on all websites).
+Guard needs it because its default allowlist mode blocks every site that is not on your list, and
+the browser only allows redirecting a navigation to a site the extension has access to - so it has
+to cover every site. What the extension does with it, verified against the code:
+
+- While a focus session is active, the browser's own `declarativeNetRequest` matching engine
+  compares the address of each page you navigate to with your block list and redirects blocked
+  ones to the extension's blocked page. The extension's code does not receive the address of a
+  blocked navigation.
+- It does not read, inject into, or modify the content of the pages you visit. The only content
+  script it registers is limited to your StudyAtrium server's origin (see above).
+- Page addresses are never sent to your StudyAtrium server, to Spotify, or anywhere else.
+
+If you only connect Tune, the browser asks for your StudyAtrium server's origin only. You can
+withdraw the broad access at any time on the extension's page in `chrome://extensions`
+(Guard then stops working).
 ## What this extension reads
 
 - **Whether a focus session is currently running**, via `GET /api/timerstate` on the StudyAtrium
@@ -51,6 +74,22 @@ service each item authenticates with:
   temporarily so those tabs can be sent back to what they were showing before, cleared once
   restored. Held in session storage (cleared on browser restart), never transmitted anywhere.
 
+## Spotify
+
+If you connect Tune, the extension talks to Spotify directly from your browser
+(`accounts.spotify.com` for the authorization flow and token refresh, `api.spotify.com` for
+playback). It sends Spotify your own Spotify client ID, the authorization tokens, and playback
+commands (start a playlist by its URI, pause), plus the list-of-devices lookup described above.
+StudyAtrium is not involved in that traffic. Spotify processes this data as its own controller
+under [Spotify's privacy policy](https://www.spotify.com/legal/privacy-policy/); you can revoke
+the extension's access to your Spotify account at <https://www.spotify.com/account/apps/>.
+
+## Deleting your data
+
+The extension has no account of its own. Removing the extension from the browser deletes
+everything it stored locally (server URL, both API keys, block list, Spotify settings and tokens).
+Also revoke the Guard and Tune API keys in your StudyAtrium instance, and the access in your
+Spotify account (link above), because deleting the local copy does not invalidate them.
 ## What this extension never does
 
 - Never collects analytics, telemetry, or crash reports.

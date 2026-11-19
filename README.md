@@ -131,8 +131,15 @@ itself and targets one directly.
   you connect to, so it can hear StudyAtrium's own page dispatch a "timer state changed" browser
   event and relay a "check now" nudge to the extension - it doesn't read or modify page content,
   and the poll fallback still covers everything if this never fires.
-- `optional_host_permissions` (`http://*/*`, `https://*/*`) - requested only at StudyAtrium connect
-  time, scoped to exactly the one server origin you enter.
+- `optional_host_permissions` (`http://*/*`, `https://*/*`) - **access to all websites**, requested
+  when you connect Guard (together with your server's origin, in one prompt). Guard's default
+  allowlist mode blocks every site that is not on your list, so the browser only lets it redirect
+  a navigation to a site it holds access to - and that has to be every site. Guard uses this
+  access for one thing: the browser's own matching engine compares each page address you navigate
+  to with your block list and redirects blocked ones to the blocked page. The extension's code
+  does not read, inject into, or modify the pages you visit, and no page address is sent anywhere
+  (see [PRIVACY.md](PRIVACY.md)). If you only connect Tune, the prompt covers just your StudyAtrium
+  server's origin.
 - `optional_host_permissions` for `accounts.spotify.com`/`api.spotify.com` - requested only when
   you connect Tune's Spotify integration, so a Guard-only install never prompts for Spotify access
   at all.
