@@ -17,7 +17,9 @@ describe("host access disclosure", () => {
   });
 
   it("documents the Spotify hosts the manifest asks for", () => {
-    for (const host of hosts.filter((h) => h.includes("spotify.com"))) {
+    const spotifyHosts = hosts.filter((h) => /^https:\/\/[a-z]+\.spotify\.com\/\*$/.test(h));
+    expect(spotifyHosts).toHaveLength(2);
+    for (const host of spotifyHosts) {
       const bare = host.replace("https://", "").replace("/*", "");
       expect(privacy, `PRIVACY.md does not mention ${bare}`).toContain(bare);
     }
